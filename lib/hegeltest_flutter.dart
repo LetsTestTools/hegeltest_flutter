@@ -15,7 +15,7 @@
 ///   });
 /// }
 /// ```
-library hegeltest_flutter;
+library;
 
 // Re-export all generators and types from hegeltest.
 export 'package:hegeltest/hegeltest.dart'
