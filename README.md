@@ -1,0 +1,73 @@
+# hegeltest_flutter — Property-based testing for Flutter
+
+[![pub package](https://img.shields.io/pub/v/hegeltest_flutter.svg)](https://pub.dev/packages/hegeltest_flutter)
+[![CI](https://github.com/LetsTestTools/hegeltest_flutter/actions/workflows/ci.yml/badge.svg)](https://github.com/LetsTestTools/hegeltest_flutter/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
+Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — property-based testing powered by Hegel's native fuzzing engine.
+
+## Why this package?
+
+`hegeltest` depends on `package:test`. Flutter projects use `flutter_test`. This package bridges the gap by providing `hegelFlutterTest()` which uses `flutter_test`'s `test()` function while giving you full access to all hegeltest generators.
+
+## Quick Start
+
+```yaml
+dev_dependencies:
+  hegeltest_flutter: ^0.1.0
+  flutter_test:
+    sdk: flutter
+```
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+
+void main() {
+  hegelFlutterTest('reverse is involutory', (tc) {
+    final xs = tc.draw(lists(integers()));
+    expect(xs.reversed.toList().reversed.toList(), equals(xs));
+  });
+}
+```
+
+Run with:
+```bash
+flutter test
+```
+
+## API
+
+`hegelFlutterTest()` accepts all the same parameters as `hegelTest()`:
+
+- `testCases` — number of random inputs to try (default: 100)
+- `seed` — fixed seed for reproducibility
+- `reproduce` — replay a specific failure blob
+- `config` — `HegelConfig` for reusable settings
+- `setUpEach` / `tearDownEach` — per-iteration lifecycle hooks
+- All `flutter_test` parameters: `timeout`, `tags`, `skip`, `retry`
+
+All generators from `package:hegeltest` are re-exported:
+
+- **Primitives**: `integers()`, `doubles()`, `booleans()`, `bigIntegers()`
+- **Text**: `text()`, `fromRegex()`, `emails()`, `urls()`, `uuids()`
+- **Collections**: `lists()`, `sets()`, `maps()`
+- **Combinators**: `oneOf()`, `sampled()`, `nullable()`, `tuples2/3/4()`
+- **Temporal**: `dates()`, `times()`, `dateTimes()`
+- **Network**: `ipv4Addresses()`, `ipv6Addresses()`
+- **Bytes**: `bytes()`
+
+## Platform Support
+
+| Platform | Status |
+|----------|--------|
+| macOS arm64 | ✅ |
+| Linux x64 | ✅ |
+| Linux arm64 | ✅ |
+| Windows x64 | ✅ |
+| Windows arm64 | ✅ |
+| Web | ❌ (throws `UnsupportedError`) |
+
+## License
+
+BSD 3-Clause. See [LICENSE](LICENSE).

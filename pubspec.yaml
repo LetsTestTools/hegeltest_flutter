@@ -1,0 +1,29 @@
+name: hegeltest_flutter
+description: >-
+  Flutter integration for hegeltest — property-based testing powered by
+  Hegel's native engine. Use with flutter_test instead of package:test.
+version: 0.1.0
+repository: https://github.com/LetsTestTools/hegeltest_flutter
+homepage: https://hegel.dev
+issue_tracker: https://github.com/LetsTestTools/hegeltest_flutter/issues
+
+topics:
+  - testing
+  - property-based-testing
+  - fuzzing
+  - flutter
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  hegeltest:
+    path: ../hegel-dart
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
