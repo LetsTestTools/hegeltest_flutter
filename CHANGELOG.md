@@ -1,3 +1,9 @@
+## 0.2.0
+
+- **New**: `hegelFlutterStatefulTest()` — stateful testing compatible with `flutter_test`
+- Bump `hegeltest` dependency to `^0.4.0`
+- Re-exports `StateMachine`, `StateRule`, `StateInvariant`, `Pool<T>` from hegeltest
+
 ## 0.1.0
 
 - Initial release
