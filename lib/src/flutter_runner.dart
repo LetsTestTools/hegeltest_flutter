@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
+import 'package:hegeltest/src/stateful/stateful_runner.dart';
 
 /// Property-based test function for Flutter, powered by Hegel's native engine.
 ///
@@ -77,4 +78,76 @@ int? _envSeed() {
   final raw = Platform.environment['HEGEL_SEED'];
   if (raw == null || raw.isEmpty) return null;
   return int.tryParse(raw);
+}
+
+/// Stateful property-based test function for Flutter.
+///
+/// This is the Flutter equivalent of `hegelStatefulTest` from `package:hegeltest`.
+/// Uses `flutter_test`'s `test()` instead of `package:test`'s `test()`.
+///
+/// ```dart
+/// import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+/// import 'package:flutter_test/flutter_test.dart';
+///
+/// void main() {
+///   hegelFlutterStatefulTest('stack works', () => StackMachine());
+/// }
+/// ```
+void hegelFlutterStatefulTest(
+  String description,
+  StateMachine Function() create, {
+  Timeout? timeout,
+  dynamic tags,
+  dynamic skip,
+  Map<String, dynamic>? onPlatform,
+  int? retry,
+  HegelConfig? config,
+  int? testCases,
+  int? seed,
+  bool? derandomize,
+  Set<Phase>? phases,
+  Verbosity? verbosity,
+  Set<HealthCheck>? suppressHealthChecks,
+  bool? reportMultipleFailures,
+  String? reproduce,
+  String? databaseKey,
+  String? database,
+}) {
+  test(description, () async {
+    final lib = loadHegelLibrary();
+    final runner = HegelRunner(lib);
+
+    await runner.run(
+      (tc) async {
+        final machine = create();
+        try {
+          await machine.setUp();
+          await runStateMachine(lib, tc.ctx, tc.handle, machine, tc);
+        } finally {
+          try {
+            await machine.tearDown();
+          } catch (e, st) {
+            stderr.writeln('[hegeltest_flutter] tearDown threw: $e\n$st');
+          }
+        }
+      },
+      reproduceBlob: reproduce ?? config?.reproduce,
+      testCases: testCases ?? config?.testCases,
+      seed: seed ?? config?.seed ?? _envSeed(),
+      derandomize: derandomize ?? config?.derandomize,
+      phases: phases ?? config?.phases,
+      verbosity: verbosity ?? config?.verbosity,
+      suppressHealthChecks:
+          suppressHealthChecks ?? config?.suppressHealthChecks,
+      reportMultipleFailures:
+          reportMultipleFailures ?? config?.reportMultipleFailures,
+      databaseKey: databaseKey ?? config?.databaseKey,
+      database: database ?? config?.database,
+    );
+  },
+      timeout: timeout ?? const Timeout(Duration(minutes: 10)),
+      tags: tags,
+      skip: skip,
+      onPlatform: onPlatform,
+      retry: retry);
 }

@@ -19,9 +19,10 @@ library;
 
 // Re-export all generators and types from hegeltest.
 export 'package:hegeltest/hegeltest.dart'
-    hide hegelTest; // Hide the package:test version
+    hide hegelTest, hegelStatefulTest; // Hide the package:test versions
 
 export 'package:hegeltest/generators.dart';
 
-// Export Flutter-compatible test function.
-export 'src/flutter_runner.dart' show hegelFlutterTest;
+// Export Flutter-compatible test functions.
+export 'src/flutter_runner.dart'
+    show hegelFlutterTest, hegelFlutterStatefulTest;
