@@ -1,3 +1,9 @@
+## 0.3.0
+
+- **Breaking**: Minimum Dart SDK bumped to `>=3.10.0`, Flutter `>=3.38.0`
+- Bump `hegeltest` dependency to `^0.5.0` (Native Assets integration)
+- Native library now auto-resolved via Dart Build Hooks — no manual setup needed
+
 ## 0.2.0
 
 - **New**: `hegelFlutterStatefulTest()` — stateful testing compatible with `flutter_test`
