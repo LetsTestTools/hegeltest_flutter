@@ -25,15 +25,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14      # Apple Silicon
-          - os: ubuntu-latest # Linux x64
+          - os: macos-14       # Apple Silicon
+            lib: macos_arm64/libhegel_c.dylib
+          - os: ubuntu-latest  # Linux x64
+            lib: linux_x64/libhegel_c.so
           - os: windows-latest # Windows x64
+            lib: windows_x64/hegel_c.dll
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
       - run: flutter pub get
+      - name: Resolve hegeltest native binary
+        shell: bash
+        run: |
+          HEGELTEST_DIR=$(find $PUB_CACHE/hosted/pub.dev -maxdepth 1 -name 'hegeltest-*' -type d | sort -V | tail -1)
+          echo "HEGEL_LIBHEGEL_PATH=$HEGELTEST_DIR/native/${{ matrix.lib }}" >> $GITHUB_ENV
       - run: flutter test
 
   format:

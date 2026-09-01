@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/hegeltest_flutter.svg)](https://pub.dev/packages/hegeltest_flutter)
 [![CI](https://github.com/LetsTestTools/hegeltest_flutter/actions/workflows/ci.yml/badge.svg)](https://github.com/LetsTestTools/hegeltest_flutter/actions/workflows/ci.yml)
-[![license](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![license](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — property-based testing powered by Hegel's native fuzzing engine.
 
@@ -14,7 +14,7 @@ Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — prop
 
 ```yaml
 dev_dependencies:
-  hegeltest_flutter: ^0.1.0
+  hegeltest_flutter: ^0.3.0
   flutter_test:
     sdk: flutter
 ```
@@ -57,6 +57,19 @@ All generators from `package:hegeltest` are re-exported:
 - **Network**: `ipv4Addresses()`, `ipv6Addresses()`
 - **Bytes**: `bytes()`
 
+## Stateful Testing
+
+For complex, state-dependent systems, `hegeltest_flutter` supports stateful property-based testing. This allows you to generate random sequences of operations and verify that your system invariants hold at every step.
+
+```dart
+import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  hegelFlutterStatefulTest('counter works', () => CounterMachine());
+}
+```
+
 ## Platform Support
 
 | Platform | Status |
@@ -70,4 +83,4 @@ All generators from `package:hegeltest` are re-exported:
 
 ## License
 
-BSD 3-Clause. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
