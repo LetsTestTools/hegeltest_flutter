@@ -10,12 +10,11 @@ assignees: ''
 ## Description
 A clear and concise description of what the bug is.
 
-## Steps to Reproduce
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+## Minimal Reproduction
+Provide the smallest test or code snippet that reproduces the issue:
+1. The `hegelFlutterTest`, `hegelFlutterWidgetTest`, or generator call that triggers the bug
+2. The input or seed used (if known)
+3. The full error output
 
 ## Expected Behavior
 A clear and concise description of what you expected to happen.
@@ -28,9 +27,10 @@ A clear and concise description of what actually happened.
  - Dart/Flutter SDK Version: [e.g. 3.2.0]
  - Package Version: [e.g. 0.5.0]
 
-## Reproduce Blob (if applicable)
+## Reproduction Code (if applicable)
+If hegeltest printed a `reproduce:` blob, paste it here:
 ```dart
-// Paste code here
+// Paste your test with the reproduce: parameter, or a minimal failing example
 ```
 
 ## Additional Context

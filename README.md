@@ -70,6 +70,56 @@ void main() {
 }
 ```
 
+## Widget Testing
+
+`hegeltest_flutter` includes `hegelFlutterWidgetTest` which wraps `testWidgets()`, allowing you to run property-based tests on your Flutter UI. The callback receives both a `TestCase` (for drawing random values) and a `WidgetTester` (for pumping widgets).
+
+Basic example: generating random text and verifying it renders.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+
+void main() {
+  hegelFlutterWidgetTest('text widget renders correctly', (tc, tester) async {
+    final text = tc.draw(strings());
+    await tester.pumpWidget(MaterialApp(home: Text(text)));
+    expect(find.text(text), findsOneWidget);
+  });
+}
+```
+
+Config sweep example: generate random widget configs, pump, and verify no overflow.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+
+void main() {
+  hegelFlutterWidgetTest('padding does not cause overflow', (tc, tester) async {
+    final left = tc.draw(integers(min: 0, max: 100)).toDouble();
+    final top = tc.draw(integers(min: 0, max: 100)).toDouble();
+    final right = tc.draw(integers(min: 0, max: 100)).toDouble();
+    final bottom = tc.draw(integers(min: 0, max: 100)).toDouble();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(left, top, right, bottom),
+            child: const SizedBox(width: 50, height: 50),
+          ),
+        ),
+      ),
+    );
+    
+    expect(find.byType(SizedBox), findsOneWidget);
+  });
+}
+```
+
 ## Platform Support
 
 | Platform | Status |

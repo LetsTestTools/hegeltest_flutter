@@ -12,10 +12,14 @@ To set up the project locally:
 
 ### Running with hegeltest 0.5.0+
 
-Due to limitations in how `flutter test` sets up the environment and runs test suites, `hegeltest` (versions 0.5.0 and above) might require a workaround to load the native `libhegel` binary correctly. If you encounter errors about missing native libraries while running tests, you can explicitly provide the path using the `HEGEL_LIBHEGEL_PATH` environment variable:
+Due to limitations in how `flutter test` resolves Native Assets from pub dependencies, `hegeltest` (0.5.0+) requires the `HEGEL_LIBHEGEL_PATH` environment variable to load the native binary. Find the binary in your pub cache:
 
 ```bash
-export HEGEL_LIBHEGEL_PATH=$(pwd)/.dart_tool/hegel/libhegel.so  # adjust path for your OS
+# macOS arm64:
+export HEGEL_LIBHEGEL_PATH=$(find $HOME/.pub-cache/hosted/pub.dev -path '*/hegeltest-*/native/macos_arm64/libhegel_c.dylib' | sort -V | tail -1)
+# Linux x64:
+export HEGEL_LIBHEGEL_PATH=$(find $HOME/.pub-cache/hosted/pub.dev -path '*/hegeltest-*/native/linux_x64/libhegel_c.so' | sort -V | tail -1)
+
 flutter test
 ```
 

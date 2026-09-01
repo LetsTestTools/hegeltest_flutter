@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest_flutter/hegeltest_flutter.dart';
 
@@ -19,6 +20,34 @@ void main() {
   });
 
   hegelFlutterStatefulTest('counter matches model', () => _CounterMachine());
+
+  hegelFlutterWidgetTest('text widget renders correctly', (tc, tester) async {
+    final s = tc.draw(text());
+    await tester.pumpWidget(
+      Directionality(textDirection: TextDirection.ltr, child: Text(s)),
+    );
+    expect(find.text(s), findsOneWidget);
+  });
+
+  hegelFlutterWidgetTest('padding does not cause overflow', (tc, tester) async {
+    final left = tc.draw(integers(min: 0, max: 100)).toDouble();
+    final top = tc.draw(integers(min: 0, max: 100)).toDouble();
+    final right = tc.draw(integers(min: 0, max: 100)).toDouble();
+    final bottom = tc.draw(integers(min: 0, max: 100)).toDouble();
+
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(left, top, right, bottom),
+            child: const SizedBox(width: 50, height: 50),
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(SizedBox), findsOneWidget);
+  });
 }
 
 class _CounterMachine extends StateMachine {
