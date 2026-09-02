@@ -157,3 +157,78 @@ void hegelFlutterStatefulTest(
     retry: retry,
   );
 }
+
+/// Property-based widget test function for Flutter.
+///
+/// This wraps `flutter_test`'s `testWidgets()`. The callback receives both a
+/// [TestCase] for drawing random values, and a [WidgetTester] for pumping widgets.
+///
+/// ```dart
+/// import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+/// import 'package:flutter_test/flutter_test.dart';
+/// import 'package:flutter/material.dart';
+///
+/// void main() {
+///   hegelFlutterWidgetTest('text widget renders correctly', (tc, tester) async {
+///     final text = tc.draw(strings());
+///     await tester.pumpWidget(MaterialApp(home: Text(text)));
+///     expect(find.text(text), findsOneWidget);
+///   });
+/// }
+/// ```
+void hegelFlutterWidgetTest(
+  String description,
+  FutureOr<void> Function(TestCase tc, WidgetTester tester) body, {
+  dynamic skip,
+  Timeout? timeout,
+  dynamic tags,
+  bool semanticsEnabled = true,
+  TestVariant<Object?> variant = const DefaultTestVariant(),
+  int? retry,
+  HegelConfig? config,
+  int? testCases,
+  int? seed,
+  bool? derandomize,
+  Set<Phase>? phases,
+  Verbosity? verbosity,
+  Set<HealthCheck>? suppressHealthChecks,
+  bool? reportMultipleFailures,
+  String? reproduce,
+  String? databaseKey,
+  String? database,
+  FutureOr<void> Function()? setUpEach,
+  FutureOr<void> Function()? tearDownEach,
+}) {
+  testWidgets(
+    description,
+    (tester) async {
+      final lib = loadHegelLibrary();
+      final runner = HegelRunner(lib);
+      await runner.run(
+        (tc) async {
+          await body(tc, tester);
+        },
+        reproduceBlob: reproduce ?? config?.reproduce,
+        testCases: testCases ?? config?.testCases,
+        seed: seed ?? config?.seed ?? _envSeed(),
+        derandomize: derandomize ?? config?.derandomize,
+        phases: phases ?? config?.phases,
+        verbosity: verbosity ?? config?.verbosity,
+        suppressHealthChecks:
+            suppressHealthChecks ?? config?.suppressHealthChecks,
+        reportMultipleFailures:
+            reportMultipleFailures ?? config?.reportMultipleFailures,
+        databaseKey: databaseKey ?? config?.databaseKey,
+        database: database ?? config?.database,
+        setUpEach: setUpEach,
+        tearDownEach: tearDownEach,
+      );
+    },
+    skip: skip,
+    timeout: timeout ?? const Timeout(Duration(minutes: 10)),
+    semanticsEnabled: semanticsEnabled,
+    variant: variant,
+    tags: tags,
+    retry: retry,
+  );
+}

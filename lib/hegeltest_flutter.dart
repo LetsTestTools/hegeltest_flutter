@@ -25,4 +25,4 @@ export 'package:hegeltest/generators.dart';
 
 // Export Flutter-compatible test functions.
 export 'src/flutter_runner.dart'
-    show hegelFlutterTest, hegelFlutterStatefulTest;
+    show hegelFlutterTest, hegelFlutterStatefulTest, hegelFlutterWidgetTest;

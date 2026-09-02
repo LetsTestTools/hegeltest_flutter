@@ -1,3 +1,7 @@
+## 0.4.0
+
+- **New**: `hegelFlutterWidgetTest()` — property-based testing for Flutter widgets
+
 ## 0.3.0
 
 - **Breaking**: Minimum Dart SDK bumped to `>=3.10.0`, Flutter `>=3.38.0`
