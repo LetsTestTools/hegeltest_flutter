@@ -232,3 +232,55 @@ void hegelFlutterWidgetTest(
     retry: retry,
   );
 }
+
+/// Standalone property-based test runner for Flutter.
+///
+/// Returns a [RunResult] instead of throwing, and does NOT wrap in
+/// `test()` from `flutter_test`. Use for custom runners, CI integration,
+/// or programmatic analysis of property results.
+///
+/// ```dart
+/// final result = await runHegelFlutterTest((tc) {
+///   final a = tc.draw(integers());
+///   final b = tc.draw(integers());
+///   assert(a + b == b + a);
+/// });
+///
+/// print(result.status);       // RunStatus.passed
+/// print(result.testCasesRun); // 100
+/// ```
+Future<RunResult> runHegelFlutterTest(
+  FutureOr<void> Function(TestCase tc) body, {
+  HegelConfig? config,
+  int? testCases,
+  int? seed,
+  bool? derandomize,
+  Set<Phase>? phases,
+  Verbosity? verbosity,
+  Set<HealthCheck>? suppressHealthChecks,
+  bool? reportMultipleFailures,
+  String? reproduce,
+  String? databaseKey,
+  String? database,
+  FutureOr<void> Function()? setUpEach,
+  FutureOr<void> Function()? tearDownEach,
+}) async {
+  final lib = loadHegelLibrary();
+  final runner = HegelRunner(lib);
+  return runner.runWithResult(
+    body,
+    reproduceBlob: reproduce ?? config?.reproduce,
+    testCases: testCases ?? config?.testCases,
+    seed: seed ?? config?.seed ?? _envSeed(),
+    derandomize: derandomize ?? config?.derandomize,
+    phases: phases ?? config?.phases,
+    verbosity: verbosity ?? config?.verbosity,
+    suppressHealthChecks: suppressHealthChecks ?? config?.suppressHealthChecks,
+    reportMultipleFailures:
+        reportMultipleFailures ?? config?.reportMultipleFailures,
+    databaseKey: databaseKey ?? config?.databaseKey,
+    database: database ?? config?.database,
+    setUpEach: setUpEach,
+    tearDownEach: tearDownEach,
+  );
+}
