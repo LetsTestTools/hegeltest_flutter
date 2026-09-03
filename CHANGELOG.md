@@ -1,3 +1,10 @@
+## 0.5.1
+
+- **New**: `example/main.dart` — complete examples for unit, widget, and stateful property testing
+- **Docs**: Fix `strings()` generator typo to `text()` in README widget test example
+- **Docs**: Add complete self-contained `CounterMachine` implementation in README
+- **Docs**: Document `runHegelFlutterTest()` standalone runner in README
+
 ## 0.5.0
 
 - **New**: `runHegelFlutterTest()` — standalone property runner returning `RunResult` without `test()` wrapper
