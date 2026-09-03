@@ -2,9 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest_flutter/hegeltest_flutter.dart';
 
-/// A simple counter model for stateful property testing.
+/// System under test (SUT) with internal business logic.
+class Counter {
+  int value = 0;
+  void increment(int step) => value += step;
+  void decrement(int step) => value -= step;
+  void reset() => value = 0;
+}
+
+/// Model-based state machine that exercises [Counter] and asserts
+/// its state against a simplified independent model.
 class CounterMachine extends StateMachine {
-  int count = 0;
+  final counter = Counter();
   int model = 0;
 
   @override
@@ -13,7 +22,7 @@ class CounterMachine extends StateMachine {
       'increment',
       execute: (tc) {
         final step = tc.draw(integers(min: 1, max: 10));
-        count += step;
+        counter.increment(step);
         model += step;
       },
     ),
@@ -21,14 +30,14 @@ class CounterMachine extends StateMachine {
       'decrement',
       execute: (tc) {
         final step = tc.draw(integers(min: 1, max: 5));
-        count -= step;
+        counter.decrement(step);
         model -= step;
       },
     ),
     StateRule(
       'reset',
       execute: (tc) {
-        count = 0;
+        counter.reset();
         model = 0;
       },
     ),
@@ -37,9 +46,9 @@ class CounterMachine extends StateMachine {
   @override
   List<StateInvariant> get invariants => [
     StateInvariant(
-      'count matches model',
+      'counter value matches model',
       check: (tc) {
-        expect(count, equals(model));
+        expect(counter.value, equals(model));
       },
     ),
   ];

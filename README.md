@@ -65,24 +65,31 @@ For complex, state-dependent systems, `hegeltest_flutter` supports stateful prop
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest_flutter/hegeltest_flutter.dart';
 
+class Counter {
+  int value = 0;
+  void increment(int step) => value += step;
+  void decrement(int step) => value -= step;
+  void reset() => value = 0;
+}
+
 class CounterMachine extends StateMachine {
-  int count = 0;
+  final counter = Counter();
   int model = 0;
 
   @override
   List<StateRule> get rules => [
         StateRule('increment', execute: (tc) {
           final step = tc.draw(integers(min: 1, max: 10));
-          count += step;
+          counter.increment(step);
           model += step;
         }),
         StateRule('decrement', execute: (tc) {
           final step = tc.draw(integers(min: 1, max: 5));
-          count -= step;
+          counter.decrement(step);
           model -= step;
         }),
         StateRule('reset', execute: (tc) {
-          count = 0;
+          counter.reset();
           model = 0;
         }),
       ];
@@ -90,9 +97,9 @@ class CounterMachine extends StateMachine {
   @override
   List<StateInvariant> get invariants => [
         StateInvariant(
-          'count matches model',
+          'counter value matches model',
           check: (tc) {
-            expect(count, equals(model));
+            expect(counter.value, equals(model));
           },
         ),
       ];
