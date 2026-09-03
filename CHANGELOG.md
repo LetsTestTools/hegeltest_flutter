@@ -1,3 +1,9 @@
+## 0.6.0
+
+- **New**: Bump `hegeltest` dependency to `^0.7.0`, bringing `tc.collect()` observation statistics API to Flutter
+- **Example**: Update `example/main.dart` demonstrating `tc.collect()` in unit tests, widget configuration sweeps, and standalone runners
+- **Docs**: Expand README with `tc.collect()` statistics distribution guidance and programmatic runner usage
+
 ## 0.5.1
 
 - **New**: `example/main.dart` — complete examples for unit, widget, and stateful property testing
