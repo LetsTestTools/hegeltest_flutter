@@ -14,7 +14,7 @@ Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — prop
 
 ```yaml
 dev_dependencies:
-  hegeltest_flutter: ^0.3.0
+  hegeltest_flutter: ^0.5.0
   flutter_test:
     sdk: flutter
 ```
@@ -59,11 +59,44 @@ All generators from `package:hegeltest` are re-exported:
 
 ## Stateful Testing
 
-For complex, state-dependent systems, `hegeltest_flutter` supports stateful property-based testing. This allows you to generate random sequences of operations and verify that your system invariants hold at every step.
+For complex, state-dependent systems, `hegeltest_flutter` supports stateful property-based testing. This allows you to generate random sequences of operations and verify that your system invariants hold at every step:
 
 ```dart
-import 'package:hegeltest_flutter/hegeltest_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+
+class CounterMachine extends StateMachine {
+  int count = 0;
+  int model = 0;
+
+  @override
+  List<StateRule> get rules => [
+        StateRule('increment', execute: (tc) {
+          final step = tc.draw(integers(min: 1, max: 10));
+          count += step;
+          model += step;
+        }),
+        StateRule('decrement', execute: (tc) {
+          final step = tc.draw(integers(min: 1, max: 5));
+          count -= step;
+          model -= step;
+        }),
+        StateRule('reset', execute: (tc) {
+          count = 0;
+          model = 0;
+        }),
+      ];
+
+  @override
+  List<StateInvariant> get invariants => [
+        StateInvariant(
+          'count matches model',
+          check: (tc) {
+            expect(count, equals(model));
+          },
+        ),
+      ];
+}
 
 void main() {
   hegelFlutterStatefulTest('counter works', () => CounterMachine());
@@ -74,7 +107,7 @@ void main() {
 
 `hegeltest_flutter` includes `hegelFlutterWidgetTest` which wraps `testWidgets()`, allowing you to run property-based tests on your Flutter UI. The callback receives both a `TestCase` (for drawing random values) and a `WidgetTester` (for pumping widgets).
 
-Basic example: generating random text and verifying it renders.
+Basic example: generating random text and verifying it renders without errors.
 
 ```dart
 import 'package:flutter/material.dart';
@@ -83,9 +116,9 @@ import 'package:hegeltest_flutter/hegeltest_flutter.dart';
 
 void main() {
   hegelFlutterWidgetTest('text widget renders correctly', (tc, tester) async {
-    final text = tc.draw(strings());
-    await tester.pumpWidget(MaterialApp(home: Text(text)));
-    expect(find.text(text), findsOneWidget);
+    final label = tc.draw(text(minSize: 1, maxSize: 50));
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Text(label))));
+    expect(find.text(label), findsOneWidget);
   });
 }
 ```
@@ -118,6 +151,36 @@ void main() {
     expect(find.byType(SizedBox), findsOneWidget);
   });
 }
+```
+
+## Standalone Runner
+
+For custom testing tools, CI scripts, or programmatic analysis, use `runHegelFlutterTest()`. It returns a `RunResult` without wrapping inside `flutter_test`:
+
+```dart
+final result = await runHegelFlutterTest((tc) {
+  final a = tc.draw(integers());
+  final b = tc.draw(integers());
+  assert(a + b == b + a);
+});
+
+print(result.status);       // RunStatus.passed
+print(result.testCasesRun); // 100
+```
+
+## Collecting Statistics
+
+Use `tc.collect()` to inspect the distribution of generated values:
+
+```dart
+hegelFlutterTest('string reverse is involutory', (tc) {
+  final s = tc.draw(text());
+  tc.collect(
+    s.isEmpty ? 'empty' : (s.length < 10 ? 'short' : 'long'),
+    label: 'length',
+  );
+  expect(s.split('').reversed.join().split('').reversed.join(), equals(s));
+});
 ```
 
 ## Platform Support

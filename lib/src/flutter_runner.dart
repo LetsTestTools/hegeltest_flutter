@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
+// ignore: implementation_imports
 import 'package:hegeltest/src/stateful/stateful_runner.dart';
 
 /// Property-based test function for Flutter, powered by Hegel's native engine.
