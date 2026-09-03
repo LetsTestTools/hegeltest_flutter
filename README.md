@@ -14,7 +14,7 @@ Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — prop
 
 ```yaml
 dev_dependencies:
-  hegeltest_flutter: ^0.5.0
+  hegeltest_flutter: ^0.6.0
   flutter_test:
     sdk: flutter
 ```
@@ -177,7 +177,7 @@ print(result.testCasesRun); // 100
 
 ## Collecting Statistics
 
-Use `tc.collect()` to inspect the distribution of generated values:
+Use `tc.collect()` to inspect the distribution of generated values across your test runs:
 
 ```dart
 hegelFlutterTest('string reverse is involutory', (tc) {
@@ -187,8 +187,10 @@ hegelFlutterTest('string reverse is involutory', (tc) {
     label: 'length',
   );
   expect(s.split('').reversed.join().split('').reversed.join(), equals(s));
-});
+}, verbosity: Verbosity.verbose);
 ```
+
+When run with `verbosity: Verbosity.verbose`, distribution percentages are printed at the end of the test. When running programmatically with `runHegelFlutterTest()`, you can inspect `result.statistics` directly or format it with `result.formatStatistics()`.
 
 ## Platform Support
 
