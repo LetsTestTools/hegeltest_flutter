@@ -1,7 +1,7 @@
 ## 0.5.0
 
 - **New**: `runHegelFlutterTest()` — standalone property runner returning `RunResult` without `test()` wrapper
-- Bump `hegeltest` dependency to `^0.6.0`
+- Bump `hegeltest` dependency to `^0.6.1`
 - **Docs**: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue/PR templates
 
 ## 0.4.0
