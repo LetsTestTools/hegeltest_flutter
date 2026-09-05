@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest_flutter/hegeltest_flutter.dart';
@@ -48,6 +50,71 @@ void main() {
     );
     expect(find.byType(SizedBox), findsOneWidget);
   });
+
+  test(
+    'persistent database writes counterexample and replays on iteration 1',
+    () async {
+      final tempDir = Directory.systemTemp.createTempSync('hegel_flutter_db_');
+      try {
+        final dbPath = tempDir.path;
+        final res1 = await runHegelFlutterTest(
+          (tc) {
+            final x = tc.draw(integers(min: 1, max: 100));
+            expect(x, isNegative);
+          },
+          database: true,
+          databasePath: dbPath,
+          databaseKey: 'flutter_db_fail',
+        );
+
+        expect(res1.status, equals(RunStatus.failed));
+        final files = Directory(dbPath).listSync().whereType<File>().toList();
+        expect(files, isNotEmpty);
+
+        // Replay: counterexample replayed on iteration 1
+        final res2 = await runHegelFlutterTest(
+          (tc) {
+            final x = tc.draw(integers(min: 1, max: 100));
+            expect(x, isNegative);
+          },
+          database: true,
+          databasePath: dbPath,
+          databaseKey: 'flutter_db_fail',
+        );
+
+        expect(res2.status, equals(RunStatus.failed));
+        expect(res2.testCasesRun, equals(1));
+      } finally {
+        tempDir.deleteSync(recursive: true);
+      }
+    },
+  );
+
+  test('database: false disables counterexample persistence', () async {
+    final tempDir = Directory.systemTemp.createTempSync('hegel_flutter_nodb_');
+    try {
+      final dbPath = '${tempDir.path}/disabled_db';
+      final res = await runHegelFlutterTest(
+        (tc) {
+          final x = tc.draw(integers(min: 1, max: 100));
+          expect(x, isNegative);
+        },
+        database: false,
+        databasePath: dbPath,
+        databaseKey: 'flutter_nodb_fail',
+      );
+
+      expect(res.status, equals(RunStatus.failed));
+      expect(Directory(dbPath).existsSync(), isFalse);
+    } finally {
+      tempDir.deleteSync(recursive: true);
+    }
+  });
+
+  hegelFlutterTest('supports database parameter and config', (tc) {
+    final n = tc.draw(integers());
+    expect(n + 0, equals(n));
+  }, database: true);
 }
 
 class _CounterMachine extends StateMachine {

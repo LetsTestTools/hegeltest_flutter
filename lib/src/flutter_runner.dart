@@ -42,7 +42,8 @@ void hegelFlutterTest(
   bool? reportMultipleFailures,
   String? reproduce,
   String? databaseKey,
-  String? database,
+  bool? database,
+  String? databasePath,
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) {
@@ -64,8 +65,9 @@ void hegelFlutterTest(
             suppressHealthChecks ?? config?.suppressHealthChecks,
         reportMultipleFailures:
             reportMultipleFailures ?? config?.reportMultipleFailures,
-        databaseKey: databaseKey ?? config?.databaseKey,
+        databaseKey: databaseKey ?? config?.databaseKey ?? description,
         database: database ?? config?.database,
+        databasePath: databasePath ?? config?.databasePath,
         setUpEach: setUpEach,
         tearDownEach: tearDownEach,
       );
@@ -115,7 +117,8 @@ void hegelFlutterStatefulTest(
   bool? reportMultipleFailures,
   String? reproduce,
   String? databaseKey,
-  String? database,
+  bool? database,
+  String? databasePath,
 }) {
   test(
     description,
@@ -147,8 +150,9 @@ void hegelFlutterStatefulTest(
             suppressHealthChecks ?? config?.suppressHealthChecks,
         reportMultipleFailures:
             reportMultipleFailures ?? config?.reportMultipleFailures,
-        databaseKey: databaseKey ?? config?.databaseKey,
+        databaseKey: databaseKey ?? config?.databaseKey ?? description,
         database: database ?? config?.database,
+        databasePath: databasePath ?? config?.databasePath,
       );
     },
     timeout: timeout ?? const Timeout(Duration(minutes: 10)),
@@ -196,7 +200,8 @@ void hegelFlutterWidgetTest(
   bool? reportMultipleFailures,
   String? reproduce,
   String? databaseKey,
-  String? database,
+  bool? database,
+  String? databasePath,
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) {
@@ -219,8 +224,9 @@ void hegelFlutterWidgetTest(
             suppressHealthChecks ?? config?.suppressHealthChecks,
         reportMultipleFailures:
             reportMultipleFailures ?? config?.reportMultipleFailures,
-        databaseKey: databaseKey ?? config?.databaseKey,
+        databaseKey: databaseKey ?? config?.databaseKey ?? description,
         database: database ?? config?.database,
+        databasePath: databasePath ?? config?.databasePath,
         setUpEach: setUpEach,
         tearDownEach: tearDownEach,
       );
@@ -262,7 +268,8 @@ Future<RunResult> runHegelFlutterTest(
   bool? reportMultipleFailures,
   String? reproduce,
   String? databaseKey,
-  String? database,
+  bool? database,
+  String? databasePath,
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) async {
@@ -279,8 +286,9 @@ Future<RunResult> runHegelFlutterTest(
     suppressHealthChecks: suppressHealthChecks ?? config?.suppressHealthChecks,
     reportMultipleFailures:
         reportMultipleFailures ?? config?.reportMultipleFailures,
-    databaseKey: databaseKey ?? config?.databaseKey,
+    databaseKey: databaseKey ?? config?.databaseKey ?? 'runHegelFlutterTest',
     database: database ?? config?.database,
+    databasePath: databasePath ?? config?.databasePath,
     setUpEach: setUpEach,
     tearDownEach: tearDownEach,
   );
