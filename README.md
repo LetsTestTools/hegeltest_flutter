@@ -14,7 +14,7 @@ Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — prop
 
 ```yaml
 dev_dependencies:
-  hegeltest_flutter: ^0.6.0
+  hegeltest_flutter: ^0.7.0
   flutter_test:
     sdk: flutter
 ```
@@ -43,6 +43,9 @@ flutter test
 - `testCases` — number of random inputs to try (default: 100)
 - `seed` — fixed seed for reproducibility
 - `reproduce` — replay a specific failure blob
+- `database` — whether to persist and replay counterexamples from disk (default: `true`)
+- `databasePath` — custom path to store counterexamples (default: `.hegel/examples`)
+- `databaseKey` — identifier for the test in the database (defaults to the test `description`)
 - `config` — `HegelConfig` for reusable settings
 - `setUpEach` / `tearDownEach` — per-iteration lifecycle hooks
 - All `flutter_test` parameters: `timeout`, `tags`, `skip`, `retry`
@@ -191,6 +194,27 @@ hegelFlutterTest('string reverse is involutory', (tc) {
 ```
 
 When run with `verbosity: Verbosity.verbose`, distribution percentages are printed at the end of the test. When running programmatically with `runHegelFlutterTest()`, you can inspect `result.statistics` directly or format it with `result.formatStatistics()`.
+
+## Persistent Counterexample Database
+
+By default, `hegeltest_flutter` automatically caches discovered failing counterexamples to `.hegel/examples/` (scoped automatically by the test's `description`). On subsequent test runs, known failing examples are replayed **first** on iteration 1 during `Phase.reuse`, providing instant regression feedback before generating fresh random inputs.
+
+To ensure your repository worktree stays clean, `hegeltest` automatically generates a `.gitignore` inside `.hegel/`.
+
+You can configure or disable persistence:
+* **Opt-out**: pass `database: false` or set the environment variable `HEGEL_DATABASE=0` to disable disk persistence and replay.
+* **Custom storage path**: pass `databasePath: '.custom_db/'` to store counterexamples in an alternative directory.
+* **Stable scoping**: pass `databaseKey: 'my_stable_key'` to preserve cache continuity even if a test description changes.
+
+In CI pipelines (e.g. GitHub Actions), cache `.hegel/` to catch regressions from previous runs instantly:
+```yaml
+- name: Cache Hegel counterexamples
+  uses: actions/cache@v4
+  with:
+    path: .hegel/
+    key: hegel-${{ runner.os }}-${{ github.ref_name }}
+    restore-keys: hegel-${{ runner.os }}-
+```
 
 ## Platform Support
 

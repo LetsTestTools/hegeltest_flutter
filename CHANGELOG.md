@@ -1,3 +1,11 @@
+## 0.7.0
+
+- **New**: Bump `hegeltest` dependency to `^0.8.0`, bringing persistent counterexample database caching to Flutter
+- **New**: Automatic `.hegel/examples/` caching of failing counterexamples with instant replay on iteration 1
+- **New**: Auto-derived `databaseKey` scoped to test descriptions across unit, widget, and stateful test runners
+- **New**: Support `database: false` opt-out, `HEGEL_DATABASE=0` env var, and custom `databasePath` directory
+- **Docs**: Comprehensive database documentation and CI caching configuration in README
+
 ## 0.6.0
 
 - **New**: Bump `hegeltest` dependency to `^0.7.0`, bringing `tc.collect()` observation statistics API to Flutter
