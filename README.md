@@ -43,7 +43,7 @@ flutter test
 - `testCases` — number of random inputs to try (default: 100)
 - `seed` — fixed seed for reproducibility
 - `reproduce` — replay a specific failure blob
-- `database` — whether to persist and replay counterexamples from disk (default: `true`)
+- `database` — whether to persist and replay counterexamples from disk (default: `true`; explicit parameter overrides `HEGEL_DATABASE`)
 - `databasePath` — custom path to store counterexamples (default: `.hegel/examples`)
 - `databaseKey` — identifier for the test in the database (defaults to the test `description`)
 - `config` — `HegelConfig` for reusable settings
@@ -202,7 +202,7 @@ By default, `hegeltest_flutter` automatically caches discovered failing countere
 To ensure your repository worktree stays clean, `hegeltest` automatically generates a `.gitignore` inside `.hegel/`.
 
 You can configure or disable persistence:
-* **Opt-out**: pass `database: false` or set the environment variable `HEGEL_DATABASE=0` to disable disk persistence and replay.
+* **Opt-out**: pass `database: false` or set the environment variable `HEGEL_DATABASE=0` to disable disk persistence and replay. Explicit `database` arguments or `HegelConfig.database` settings take precedence over `HEGEL_DATABASE`.
 * **Custom storage path**: pass `databasePath: '.custom_db/'` to store counterexamples in an alternative directory.
 * **Stable scoping**: pass `databaseKey: 'my_stable_key'` to preserve cache continuity even if a test description changes.
 
