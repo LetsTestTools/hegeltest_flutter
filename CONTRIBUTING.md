@@ -11,8 +11,15 @@ To set up the project locally:
 3. Run `flutter pub get` to fetch dependencies.
 4. Install [Lefthook](https://github.com/evilmartians/lefthook) for automated pre-commit checks:
    ```bash
-   brew install lefthook   # macOS
-   lefthook install        # activates git pre-commit hooks
+   # macOS:
+   brew install lefthook
+
+   # Linux / Windows (via npm or release binary):
+   npm install -g @evilmartians/lefthook
+   # or download from https://github.com/evilmartians/lefthook/releases
+
+   # Activate git pre-commit hooks:
+   lefthook install
    ```
 5. Run tests locally (see below for `HEGEL_LIBHEGEL_PATH`).
 
