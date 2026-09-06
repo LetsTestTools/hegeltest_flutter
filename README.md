@@ -14,7 +14,7 @@ Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — prop
 
 ```yaml
 dev_dependencies:
-  hegeltest_flutter: ^0.7.0
+  hegeltest_flutter: ^0.8.0
   flutter_test:
     sdk: flutter
 ```
@@ -161,6 +161,78 @@ void main() {
     expect(find.byType(SizedBox), findsOneWidget);
   });
 }
+```
+
+## Accessibility Monkey Fuzzing
+
+`hegelFlutterMonkeyTest` traverses Flutter's active accessibility (`SemanticsOwner`) tree, discovers interactive nodes (buttons, text fields, scrollables, sliders), and fuzzes action sequences (`tap`, `longPress`, `scroll`, `setText`, `increase`/`decrease`, `dismiss`).
+
+When an unhandled crash or assertion failure occurs, Hegel's native Rust engine automatically **shrinks the action sequence to the minimal steps to reproduce** and formats a step trace:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+
+void main() {
+  hegelFlutterMonkeyTest(
+    'fuzzes checkout workflow without crashing',
+    createWidget: (tc) => const CheckoutApp(),
+    steps: 25,
+    allowedActions: [
+      SemanticsAction.tap,
+      SemanticsAction.setText,
+      SemanticsAction.scrollDown,
+    ],
+    invariant: (tc, tester) async {
+      // Invariant checked after every sequence
+      expect(find.byType(CheckoutApp), findsOneWidget);
+    },
+  );
+}
+```
+
+If a crash occurs, Hegel reports the exact minimal steps:
+```
+Monkey fuzzing caught an error after 3 step(s):
+  1. tap on "Add Coupon" (id=14)
+  2. setText on "Coupon Code" (id=18) with "DISCOUNT99"
+  3. tap on "Apply" (id=19)
+Cause: RangeError (index): Invalid value: Valid value range is empty: 0
+```
+
+## Layout & Screen Size Invariant Sweeps
+
+Dynamic accessibility font sizes (`TextScaler`), compact screens, and right-to-left (RTL) localizations are common sources of layout crashes in Flutter (`A RenderFlex overflowed by ... pixels`).
+
+`hegelFlutterLayoutSweepTest` automatically sweeps viewport dimensions, screen densities, font scaling factors, and text directions:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+
+void main() {
+  hegelFlutterLayoutSweepTest(
+    'user profile card never overflows across screens and text scales',
+    sweepConfig: const LayoutSweepConfig(
+      minWidth: 320,
+      maxWidth: 1024,
+      minHeight: 480,
+      maxHeight: 1200,
+      minTextScale: 0.8,
+      maxTextScale: 2.5,
+    ),
+    builder: (tc, sample) => const UserProfileCard(),
+  );
+}
+```
+
+When an overflow occurs, Hegel shrinks the viewport and text scale parameters to find the **exact minimal boundary condition** causing the bug:
+```
+Layout invariant violated:
+  Configuration: LayoutSample(320.0x480.0, textScale: 2.10x, direction: rtl, dpr: 1.0, keyboard: down, brightness: light)
+  Error: A RenderFlex overflowed by 14 pixels on the right.
 ```
 
 ## Standalone Runner

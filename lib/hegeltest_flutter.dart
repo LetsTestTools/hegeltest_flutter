@@ -30,3 +30,19 @@ export 'src/flutter_runner.dart'
         hegelFlutterStatefulTest,
         hegelFlutterWidgetTest,
         runHegelFlutterTest;
+
+export 'src/layout_sweep.dart'
+    show
+        hegelFlutterLayoutSweepTest,
+        LayoutSweepConfig,
+        LayoutSample,
+        LayoutOverflowException;
+
+export 'src/monkey.dart'
+    show
+        hegelFlutterMonkeyTest,
+        MonkeyStep,
+        MonkeyFuzzException,
+        kDefaultMonkeyActions;
+
+export 'package:flutter/rendering.dart' show SemanticsAction;
