@@ -128,4 +128,75 @@ void main() {
     expect(result.status, equals(RunStatus.passed));
     expect(result.statistics, isNotEmpty);
   });
+
+  // 6. Accessibility / Semantics monkey fuzzing
+  hegelFlutterMonkeyTest(
+    'monkey fuzzer exercises counter UI without unhandled exceptions',
+    createWidget: (tc) => const _CounterDemoApp(),
+    steps: 15,
+    testCases: 5,
+    allowedActions: [SemanticsAction.tap, SemanticsAction.setText],
+  );
+
+  // 7. Screen size and layout invariant sweep
+  hegelFlutterLayoutSweepTest(
+    'responsive tag list never overflows across screen sizes and text scales',
+    testCases: 5,
+    sweepConfig: const LayoutSweepConfig(
+      minWidth: 320,
+      maxWidth: 1024,
+      minHeight: 480,
+      maxHeight: 1200,
+      minTextScale: 0.8,
+      maxTextScale: 2.0,
+    ),
+    builder: (tc, sample) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Tags')),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(8, (i) => Chip(label: Text('Category $i'))),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _CounterDemoApp extends StatefulWidget {
+  const _CounterDemoApp();
+
+  @override
+  State<_CounterDemoApp> createState() => _CounterDemoAppState();
+}
+
+class _CounterDemoAppState extends State<_CounterDemoApp> {
+  int _count = 0;
+  String _note = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: Text('Count: $_count')),
+        body: Column(
+          children: [
+            ElevatedButton(
+              onPressed: () => setState(() => _count++),
+              child: const Text('Increment'),
+            ),
+            ElevatedButton(
+              onPressed: () => setState(() => _count = 0),
+              child: const Text('Reset'),
+            ),
+            TextField(onChanged: (v) => setState(() => _note = v)),
+            Text('Note: $_note'),
+          ],
+        ),
+      ),
+    );
+  }
 }

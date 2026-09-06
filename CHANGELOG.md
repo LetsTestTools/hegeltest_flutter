@@ -1,3 +1,17 @@
+## 0.8.0
+
+- **New**: `hegelFlutterMonkeyTest()` — Accessibility/Semantics monkey fuzzing for Flutter widgets and entire apps
+  - Traverses the active `SemanticsOwner` tree and discovers interactive accessibility nodes
+  - Dispatches fuzzed actions (`tap`, `longPress`, `scroll`, `setText`, `increase`/`decrease`, `dismiss`)
+  - Automatically shrinks failing action sequences to minimal reproducing steps with trace logs
+  - Supports `allowedActions` filtering, `stepInvariant`, and `invariant` callbacks
+- **New**: `hegelFlutterLayoutSweepTest()` — Comprehensive screen size and layout invariant sweep testing
+  - Sweeps viewports across logical widths, heights, dynamic `TextScaler` font scales, LTR/RTL text directions, device pixel ratios, and keyboard insets
+  - Automatically detects `RenderFlex overflowed` and framework layout errors
+  - Shrinks breaking viewports and font scales to find minimal boundary failure conditions
+  - Provides `LayoutSweepConfig`, `LayoutSample`, and `LayoutOverflowException` with automatic view size cleanup
+- **New**: Re-export `SemanticsAction` from `package:flutter/rendering.dart` in barrel file
+
 ## 0.7.0
 
 - **New**: Bump `hegeltest` dependency to `^0.8.0`, bringing persistent counterexample database caching to Flutter
