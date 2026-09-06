@@ -7,12 +7,38 @@ First off, thank you for considering contributing to `hegeltest_flutter`! We wel
 To set up the project locally:
 
 1. Fork and clone the repository.
-2. Run `flutter pub get` to fetch dependencies.
-3. Run `flutter test` to execute the test suite.
+2. Ensure you have the [Flutter SDK](https://flutter.dev/docs/get-started/install) installed (`>=3.38.0`).
+3. Run `flutter pub get` to fetch dependencies.
+4. Install [Lefthook](https://github.com/evilmartians/lefthook) for automated pre-commit checks:
+   ```bash
+   # macOS:
+   brew install lefthook
 
-### Running with hegeltest 0.5.0+
+   # Linux / Windows (via npm or release binary):
+   npm install -g @evilmartians/lefthook
+   # or download from https://github.com/evilmartians/lefthook/releases
 
-Due to limitations in how `flutter test` resolves Native Assets from pub dependencies, `hegeltest` (0.5.0+) requires the `HEGEL_LIBHEGEL_PATH` environment variable to load the native binary. Find the binary in your pub cache:
+   # Activate git pre-commit hooks:
+   lefthook install
+   ```
+5. Run tests locally (see below for `HEGEL_LIBHEGEL_PATH`).
+
+### Pre-commit Hooks (Lefthook)
+
+This repository enforces formatting and static analysis on every commit via Lefthook:
+- **`format`**: Verifies staged files conform to `dart format`.
+- **`analyze`**: Ensures `flutter analyze --fatal-infos` passes with 0 issues.
+
+> [!NOTE]
+> Please do not bypass pre-commit hooks (avoid `git commit --no-verify`). Fixing lints locally ensures our multi-platform CI checks pass on the first attempt.
+
+> [!TIP]
+> **Why no Nix devShell for Flutter?**
+> Flutter requires write access to its internal cache (`bin/cache/`) and direct integration with host Xcode / CocoaPods toolchains on macOS. Placing Flutter inside a read-only Nix store frequently causes permission and code-signing conflicts. We recommend using your standard host Flutter install with Lefthook.
+
+### Running Tests Locally (HEGEL_LIBHEGEL_PATH)
+
+Due to limitations in how `flutter test` resolves Native Assets from transitive dependencies during local execution, `hegeltest` requires the `HEGEL_LIBHEGEL_PATH` environment variable to load the native engine binary. Point it to the prebuilt binary in your local checkout or pub cache:
 
 ```bash
 # macOS arm64:
