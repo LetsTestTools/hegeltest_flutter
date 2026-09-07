@@ -1,3 +1,9 @@
+## 0.9.0
+
+- **New**: Bump `hegeltest` dependency to `^0.9.0`, bringing `tc.classify()`, `tc.cover()`, `sampledWeighted()`, and `oneOfWeighted()` to Flutter
+- **New**: Minimum distribution coverage assertions via `tc.cover()` with `InsufficientCoverageException` in Flutter tests
+- **New**: Direct weighted sampling with `sampledWeighted()` and `oneOfWeighted()` combinators
+
 ## 0.8.0
 
 - **New**: `hegelFlutterMonkeyTest()` — Accessibility/Semantics monkey fuzzing for Flutter widgets and entire apps
