@@ -115,6 +115,25 @@ void main() {
     final n = tc.draw(integers());
     expect(n + 0, equals(n));
   }, database: true);
+
+  hegelFlutterTest('supports tc.cover, tc.classify, and weighted sampling', (
+    tc,
+  ) {
+    final flag = tc.draw(sampledWeighted([(7, true), (3, false)]));
+    final num = tc.draw(
+      oneOfWeighted([
+        (8, integers(min: 0, max: 10)),
+        (2, integers(min: 100, max: 200)),
+      ]),
+    );
+
+    tc.classify(flag, 'flag_true');
+    tc.classify(!flag, 'flag_false');
+    // flag is true ~70% of the time, require at least 40%
+    tc.cover(40.0, flag, 'flag_coverage');
+
+    expect(num, greaterThanOrEqualTo(0));
+  });
 }
 
 class _CounterMachine extends StateMachine {
