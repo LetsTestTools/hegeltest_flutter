@@ -14,7 +14,7 @@ Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — prop
 
 ```yaml
 dev_dependencies:
-  hegeltest_flutter: ^0.8.0
+  hegeltest_flutter: ^0.9.0
   flutter_test:
     sdk: flutter
 ```
@@ -55,7 +55,7 @@ All generators from `package:hegeltest` are re-exported:
 - **Primitives**: `integers()`, `doubles()`, `booleans()`, `bigIntegers()`
 - **Text**: `text()`, `fromRegex()`, `emails()`, `urls()`, `uuids()`
 - **Collections**: `lists()`, `sets()`, `maps()`
-- **Combinators**: `oneOf()`, `sampled()`, `nullable()`, `tuples2/3/4()`
+- **Combinators**: `oneOf()`, `oneOfWeighted()`, `frequency()`, `sampled()`, `sampledWeighted()`, `nullable()`, `tuples2/3/4()`
 - **Temporal**: `dates()`, `times()`, `dateTimes()`
 - **Network**: `ipv4Addresses()`, `ipv6Addresses()`
 - **Bytes**: `bytes()`
@@ -266,6 +266,43 @@ hegelFlutterTest('string reverse is involutory', (tc) {
 ```
 
 When run with `verbosity: Verbosity.verbose`, distribution percentages are printed at the end of the test. When running programmatically with `runHegelFlutterTest()`, you can inspect `result.statistics` directly or format it with `result.formatStatistics()`.
+
+## Distribution Coverage & Classification
+
+Beyond passive statistics, `hegeltest_flutter` lets you classify test inputs and enforce executable **coverage contracts** with `tc.cover()` and `tc.classify()`:
+
+* **`tc.classify(condition, observation)`**: Categorizes generated test iterations into named buckets (e.g. `'empty'`, `'single'`, `'large'`) without manual branching boilerplate.
+* **`tc.cover(minPercentage, condition, label)`**: Declares a strict minimum frequency contract for critical scenarios or rare edge cases. If the generator fails to achieve the specified percentage across all runs, the test fails with a full distribution summary, preventing distribution drift in CI.
+
+```dart
+hegelFlutterTest('cart checkout discounts satisfy distribution contracts', (tc) {
+  // Model realistic user demographics with weighted sampling
+  final userTier = tc.draw(
+    sampledWeighted([
+      (70, 'standard'),
+      (25, 'gold'),
+      (5, 'vip'),
+    ]),
+    label: 'tier',
+  );
+
+  final cartItems = tc.draw(
+    lists(integers(min: 1, max: 100), minSize: 0, maxSize: 50),
+    label: 'items',
+  );
+
+  // Classify distribution shape for telemetry
+  tc.classify(cartItems.isEmpty, 'empty cart', label: 'cart size');
+  tc.classify(cartItems.length >= 20, 'bulk cart (20+ items)', label: 'cart size');
+
+  // Enforce coverage contracts: verify rare VIP users and empty carts are tested
+  tc.cover(2.0, userTier == 'vip', 'VIP tier exercised in at least 2% of runs');
+  tc.cover(5.0, cartItems.isEmpty, 'Empty cart edge case exercised in at least 5% of runs');
+
+  // Assert SUT logic / invariants
+  expect(cartItems.length, greaterThanOrEqualTo(0));
+}, testCases: 200);
+```
 
 ## Persistent Counterexample Database
 

@@ -65,7 +65,25 @@ void main() {
     expect(s.split('').reversed.join().split('').reversed.join(), equals(s));
   });
 
-  // 2. Widget property testing: generate random text and verify rendering
+  // 2. Coverage contracts & weighted sampling
+  hegelFlutterTest('weighted sampling and coverage contracts', (tc) {
+    final role = tc.draw(
+      sampledWeighted([(70, 'guest'), (25, 'member'), (5, 'admin')]),
+      label: 'role',
+    );
+    final score = tc.draw(integers(min: 0, max: 100), label: 'score');
+
+    tc.classify(score == 100, 'perfect score', label: 'score category');
+    tc.classify(score == 0, 'zero score', label: 'score category');
+
+    tc.cover(2.0, role == 'admin', 'admin accounts exercised');
+    tc.cover(15.0, role == 'member', 'member accounts exercised');
+    tc.cover(50.0, role == 'guest', 'guest accounts exercised');
+
+    expect(score, inInclusiveRange(0, 100));
+  }, testCases: 100);
+
+  // 3. Widget property testing: generate random text and verify rendering
   hegelFlutterWidgetTest('text renders correctly without throwing', (
     tc,
     tester,
@@ -79,7 +97,7 @@ void main() {
     expect(find.text(label), findsOneWidget);
   });
 
-  // 3. Widget property testing: padding configuration sweep with distribution tracking
+  // 4. Widget property testing: padding configuration sweep with distribution tracking
   hegelFlutterWidgetTest('random padding does not overflow', (
     tc,
     tester,
@@ -112,12 +130,12 @@ void main() {
     expect(find.byType(SizedBox), findsOneWidget);
   });
 
-  // 4. Stateful model-based testing
+  // 5. Stateful model-based testing
   hegelFlutterStatefulTest('counter machine preserves model invariant', () {
     return CounterMachine();
   });
 
-  // 5. Standalone property runner with statistics inspection
+  // 6. Standalone property runner with statistics inspection
   test('standalone runner collects statistics programmatically', () async {
     final result = await runHegelFlutterTest((tc) {
       final n = tc.draw(integers(min: -20, max: 20));
@@ -129,7 +147,7 @@ void main() {
     expect(result.statistics, isNotEmpty);
   });
 
-  // 6. Accessibility / Semantics monkey fuzzing
+  // 7. Accessibility / Semantics monkey fuzzing
   hegelFlutterMonkeyTest(
     'monkey fuzzer exercises counter UI without unhandled exceptions',
     createWidget: (tc) => const _CounterDemoApp(),
@@ -138,7 +156,7 @@ void main() {
     allowedActions: [SemanticsAction.tap, SemanticsAction.setText],
   );
 
-  // 7. Screen size and layout invariant sweep
+  // 8. Screen size and layout invariant sweep
   hegelFlutterLayoutSweepTest(
     'responsive tag list never overflows across screen sizes and text scales',
     testCases: 5,
