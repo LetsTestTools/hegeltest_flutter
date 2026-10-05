@@ -6,6 +6,8 @@ import 'package:hegeltest/hegeltest.dart';
 // ignore: implementation_imports
 import 'package:hegeltest/src/stateful/stateful_runner.dart';
 
+import 'env.dart';
+
 /// Property-based test function for Flutter, powered by Hegel's native engine.
 ///
 /// This is the Flutter equivalent of `hegelTest` from `package:hegeltest`.
@@ -57,7 +59,7 @@ void hegelFlutterTest(
         body,
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -78,12 +80,6 @@ void hegelFlutterTest(
     onPlatform: onPlatform,
     retry: retry,
   );
-}
-
-int? _envSeed() {
-  final raw = Platform.environment['HEGEL_SEED'];
-  if (raw == null || raw.isEmpty) return null;
-  return int.tryParse(raw);
 }
 
 /// Stateful property-based test function for Flutter.
@@ -142,7 +138,7 @@ void hegelFlutterStatefulTest(
         },
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -216,7 +212,7 @@ void hegelFlutterWidgetTest(
         },
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -279,7 +275,7 @@ Future<RunResult> runHegelFlutterTest(
     body,
     reproduceBlob: reproduce ?? config?.reproduce,
     testCases: testCases ?? config?.testCases,
-    seed: seed ?? config?.seed ?? _envSeed(),
+    seed: seed ?? config?.seed ?? envSeed(),
     derandomize: derandomize ?? config?.derandomize,
     phases: phases ?? config?.phases,
     verbosity: verbosity ?? config?.verbosity,
