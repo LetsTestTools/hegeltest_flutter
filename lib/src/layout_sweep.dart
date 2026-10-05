@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
+
+import 'env.dart';
 
 /// Configuration bounds and options for [hegelFlutterLayoutSweepTest].
 class LayoutSweepConfig {
@@ -260,7 +261,7 @@ void hegelFlutterLayoutSweepTest(
         },
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -287,10 +288,4 @@ void hegelFlutterLayoutSweepTest(
     tags: tags,
     retry: retry,
   );
-}
-
-int? _envSeed() {
-  final raw = Platform.environment['HEGEL_SEED'];
-  if (raw == null || raw.isEmpty) return null;
-  return int.tryParse(raw);
 }
