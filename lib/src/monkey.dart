@@ -148,73 +148,96 @@ void hegelFlutterMonkeyTest(
 
       await runner.run(
         (tc) async {
-          final widget = createWidget(tc);
-          await tester.pumpWidget(widget);
-
-          final dynamic initialEx = tester.takeException();
-          if (initialEx != null) {
-            throw MonkeyFuzzException(steps: const [], cause: initialEx);
-          }
-
-          final owner = tester.binding.rootPipelineOwner.semanticsOwner;
-          if (owner == null) {
-            throw StateError(
-              'SemanticsOwner is not available. Ensure semanticsEnabled is true.',
-            );
-          }
-
-          final effectiveAllowedActions =
-              allowedActions ?? kDefaultMonkeyActions;
-          final stepHistory = <MonkeyStep>[];
-
-          for (var i = 0; i < steps; i++) {
-            final candidates = _collectCandidates(
-              owner.rootSemanticsNode,
-              effectiveAllowedActions,
+          try {
+            final widget = createWidget(tc);
+            await tester.pumpWidget(
+              KeyedSubtree(key: UniqueKey(), child: widget),
             );
 
-            if (candidates.isEmpty) {
-              break;
+            final dynamic initialEx = tester.takeException();
+            if (initialEx != null) {
+              throw MonkeyFuzzException(steps: const [], cause: initialEx);
             }
 
-            final choice = tc.draw(
-              integers(min: 0, max: candidates.length - 1),
-              label: 'step_${i + 1}_action_index',
-            );
-            final candidate = candidates[choice];
-            final node = candidate.node;
-            final action = candidate.action;
-            final label = node.getSemanticsData().label;
-
-            Object? actionArg;
-            if (action == SemanticsAction.setText) {
-              actionArg = tc.draw(
-                effectiveTextGenerator,
-                label: 'step_${i + 1}_text_value',
+            final owner = tester.binding.rootPipelineOwner.semanticsOwner;
+            if (owner == null) {
+              throw StateError(
+                'SemanticsOwner is not available. Ensure semanticsEnabled is true.',
               );
-              owner.performAction(node.id, action, actionArg);
-            } else {
-              owner.performAction(node.id, action);
             }
 
-            final step = MonkeyStep(
-              nodeId: node.id,
-              label: label,
-              action: action,
-              argument: actionArg,
-            );
-            stepHistory.add(step);
+            final effectiveAllowedActions =
+                allowedActions ?? kDefaultMonkeyActions;
+            final stepHistory = <MonkeyStep>[];
 
-            await tester.pump(pumpDuration);
+            for (var i = 0; i < steps; i++) {
+              final candidates = _collectCandidates(
+                owner.rootSemanticsNode,
+                effectiveAllowedActions,
+              );
 
-            final dynamic caughtEx = tester.takeException();
-            if (caughtEx != null) {
-              throw MonkeyFuzzException(steps: stepHistory, cause: caughtEx);
+              if (candidates.isEmpty) {
+                break;
+              }
+
+              final choice = tc.draw(
+                integers(min: 0, max: candidates.length - 1),
+                label: 'step_${i + 1}_action_index',
+              );
+              final candidate = candidates[choice];
+              final node = candidate.node;
+              final action = candidate.action;
+              final label = node.getSemanticsData().label;
+
+              Object? actionArg;
+              if (action == SemanticsAction.setText) {
+                actionArg = tc.draw(
+                  effectiveTextGenerator,
+                  label: 'step_${i + 1}_text_value',
+                );
+                owner.performAction(node.id, action, actionArg);
+              } else {
+                owner.performAction(node.id, action);
+              }
+
+              final step = MonkeyStep(
+                nodeId: node.id,
+                label: label,
+                action: action,
+                argument: actionArg,
+              );
+              stepHistory.add(step);
+
+              await tester.pump(pumpDuration);
+
+              final dynamic caughtEx = tester.takeException();
+              if (caughtEx != null) {
+                throw MonkeyFuzzException(steps: stepHistory, cause: caughtEx);
+              }
+
+              if (stepInvariant != null) {
+                try {
+                  await stepInvariant(tc, tester, step);
+                } catch (e, st) {
+                  throw MonkeyFuzzException(
+                    steps: stepHistory,
+                    cause: e,
+                    stackTrace: st,
+                  );
+                }
+                final dynamic stepInvEx = tester.takeException();
+                if (stepInvEx != null) {
+                  throw MonkeyFuzzException(
+                    steps: stepHistory,
+                    cause: stepInvEx,
+                  );
+                }
+              }
             }
 
-            if (stepInvariant != null) {
+            if (invariant != null) {
               try {
-                await stepInvariant(tc, tester, step);
+                await invariant(tc, tester);
               } catch (e, st) {
                 throw MonkeyFuzzException(
                   steps: stepHistory,
@@ -222,19 +245,13 @@ void hegelFlutterMonkeyTest(
                   stackTrace: st,
                 );
               }
+              final dynamic invEx = tester.takeException();
+              if (invEx != null) {
+                throw MonkeyFuzzException(steps: stepHistory, cause: invEx);
+              }
             }
-          }
-
-          if (invariant != null) {
-            try {
-              await invariant(tc, tester);
-            } catch (e, st) {
-              throw MonkeyFuzzException(
-                steps: stepHistory,
-                cause: e,
-                stackTrace: st,
-              );
-            }
+          } finally {
+            while (tester.takeException() != null) {}
           }
         },
         reproduceBlob: reproduce ?? config?.reproduce,

@@ -29,7 +29,8 @@ export 'src/flutter_runner.dart'
         hegelFlutterTest,
         hegelFlutterStatefulTest,
         hegelFlutterWidgetTest,
-        runHegelFlutterTest;
+        runHegelFlutterTest,
+        runHegelFlutterWidgetTest;
 
 export 'src/layout_sweep.dart'
     show
