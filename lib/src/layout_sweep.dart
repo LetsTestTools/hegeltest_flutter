@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
+
+import 'env.dart';
 
 /// Configuration bounds and options for [hegelFlutterLayoutSweepTest].
 class LayoutSweepConfig {
@@ -49,6 +50,102 @@ class LayoutSweepConfig {
     this.viewInsetsBottom = const [0.0, 300.0],
     this.brightnesses = const [Brightness.light, Brightness.dark],
   });
+
+  /// Validates that all sweep bounds and option lists are well-formed.
+  ///
+  /// Throws [ArgumentError] if any bound is non-positive, non-finite, inverted, or empty.
+  void validate() {
+    if (minWidth <= 0 || !minWidth.isFinite) {
+      throw ArgumentError.value(
+        minWidth,
+        'minWidth',
+        'must be positive and finite',
+      );
+    }
+    if (maxWidth <= 0 || !maxWidth.isFinite) {
+      throw ArgumentError.value(
+        maxWidth,
+        'maxWidth',
+        'must be positive and finite',
+      );
+    }
+    if (minWidth > maxWidth || minWidth.ceil() > maxWidth.floor()) {
+      throw ArgumentError(
+        'LayoutSweepConfig: minWidth ($minWidth) must be <= maxWidth ($maxWidth) '
+        'and span at least one integer logical pixel',
+      );
+    }
+    if (minHeight <= 0 || !minHeight.isFinite) {
+      throw ArgumentError.value(
+        minHeight,
+        'minHeight',
+        'must be positive and finite',
+      );
+    }
+    if (maxHeight <= 0 || !maxHeight.isFinite) {
+      throw ArgumentError.value(
+        maxHeight,
+        'maxHeight',
+        'must be positive and finite',
+      );
+    }
+    if (minHeight > maxHeight || minHeight.ceil() > maxHeight.floor()) {
+      throw ArgumentError(
+        'LayoutSweepConfig: minHeight ($minHeight) must be <= maxHeight ($maxHeight) '
+        'and span at least one integer logical pixel',
+      );
+    }
+    if (minTextScale <= 0 || !minTextScale.isFinite) {
+      throw ArgumentError.value(
+        minTextScale,
+        'minTextScale',
+        'must be positive and finite',
+      );
+    }
+    if (maxTextScale <= 0 || !maxTextScale.isFinite) {
+      throw ArgumentError.value(
+        maxTextScale,
+        'maxTextScale',
+        'must be positive and finite',
+      );
+    }
+    if (minTextScale > maxTextScale ||
+        (minTextScale * 100).round() > (maxTextScale * 100).round()) {
+      throw ArgumentError(
+        'LayoutSweepConfig: minTextScale ($minTextScale) must be <= maxTextScale ($maxTextScale)',
+      );
+    }
+    if (textDirections.isEmpty) {
+      throw ArgumentError.value(
+        textDirections,
+        'textDirections',
+        'must not be empty',
+      );
+    }
+    if (devicePixelRatios.isEmpty ||
+        devicePixelRatios.any((dpr) => dpr <= 0 || !dpr.isFinite)) {
+      throw ArgumentError.value(
+        devicePixelRatios,
+        'devicePixelRatios',
+        'must be non-empty with positive finite values',
+      );
+    }
+    if (viewInsetsBottom.isEmpty ||
+        viewInsetsBottom.any((inset) => inset < 0 || !inset.isFinite)) {
+      throw ArgumentError.value(
+        viewInsetsBottom,
+        'viewInsetsBottom',
+        'must be non-empty with non-negative finite values',
+      );
+    }
+    if (brightnesses.isEmpty) {
+      throw ArgumentError.value(
+        brightnesses,
+        'brightnesses',
+        'must not be empty',
+      );
+    }
+  }
 }
 
 /// The concrete viewport and accessibility parameters drawn for a test iteration.
@@ -145,24 +242,32 @@ void hegelFlutterLayoutSweepTest(
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) {
+  sweepConfig.validate();
+
   testWidgets(
     description,
     (tester) async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
 
-      addTearDown(() {
+      void resetViewOverrides() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
-      });
+        tester.view.resetViewInsets();
+        tester.platformDispatcher.clearTextScaleFactorTestValue();
+        tester.platformDispatcher.clearPlatformBrightnessTestValue();
+      }
+
+      addTearDown(resetViewOverrides);
 
       await runner.run(
         (tc) async {
           final width = tc
               .draw(
                 integers(
-                  min: sweepConfig.minWidth.toInt(),
-                  max: sweepConfig.maxWidth.toInt(),
+                  min: sweepConfig.minWidth.ceil(),
+                  max: sweepConfig.maxWidth.floor(),
                 ),
                 label: 'viewport_width',
               )
@@ -171,8 +276,8 @@ void hegelFlutterLayoutSweepTest(
           final height = tc
               .draw(
                 integers(
-                  min: sweepConfig.minHeight.toInt(),
-                  max: sweepConfig.maxHeight.toInt(),
+                  min: sweepConfig.minHeight.ceil(),
+                  max: sweepConfig.maxHeight.floor(),
                 ),
                 label: 'viewport_height',
               )
@@ -223,6 +328,11 @@ void hegelFlutterLayoutSweepTest(
 
           tester.view.physicalSize = Size(width * dpr, height * dpr);
           tester.view.devicePixelRatio = dpr;
+          tester.view.viewInsets = FakeViewPadding(
+            bottom: keyboardBottom * dpr,
+          );
+          tester.platformDispatcher.textScaleFactorTestValue = textScale;
+          tester.platformDispatcher.platformBrightnessTestValue = brightness;
 
           final mediaQueryData = MediaQueryData(
             size: Size(width, height),
@@ -234,16 +344,29 @@ void hegelFlutterLayoutSweepTest(
 
           final widget = builder(tc, sample);
 
-          Widget root = MediaQuery(
-            data: mediaQueryData,
-            child: Directionality(textDirection: textDirection, child: widget),
-          );
-
+          final Widget root;
           if (wrapWithApp && widget is! MaterialApp && widget is! WidgetsApp) {
             root = MaterialApp(
               debugShowCheckedModeBanner: false,
               theme: ThemeData(brightness: brightness),
-              home: Material(type: MaterialType.transparency, child: root),
+              builder: (context, child) {
+                return MediaQuery(
+                  data: mediaQueryData,
+                  child: Directionality(
+                    textDirection: textDirection,
+                    child: child!,
+                  ),
+                );
+              },
+              home: Material(type: MaterialType.transparency, child: widget),
+            );
+          } else {
+            root = MediaQuery(
+              data: mediaQueryData,
+              child: Directionality(
+                textDirection: textDirection,
+                child: widget,
+              ),
             );
           }
 
@@ -260,7 +383,7 @@ void hegelFlutterLayoutSweepTest(
         },
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -273,8 +396,7 @@ void hegelFlutterLayoutSweepTest(
         databasePath: databasePath ?? config?.databasePath,
         setUpEach: setUpEach,
         tearDownEach: () async {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
+          resetViewOverrides();
           if (tearDownEach != null) {
             await tearDownEach();
           }
@@ -287,10 +409,4 @@ void hegelFlutterLayoutSweepTest(
     tags: tags,
     retry: retry,
   );
-}
-
-int? _envSeed() {
-  final raw = Platform.environment['HEGEL_SEED'];
-  if (raw == null || raw.isEmpty) return null;
-  return int.tryParse(raw);
 }

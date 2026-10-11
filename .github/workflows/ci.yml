@@ -42,6 +42,12 @@ jobs:
         run: |
           HEGELTEST_DIR=$(find $PUB_CACHE/hosted/pub.dev -maxdepth 1 -name 'hegeltest-*' -type d | sort -V | tail -1)
           echo "HEGEL_LIBHEGEL_PATH=$HEGELTEST_DIR/native/${{ matrix.lib }}" >> $GITHUB_ENV
+      - name: Cache .hegel counterexamples
+        uses: actions/cache@v4
+        with:
+          path: .hegel
+          key: hegel-${{ runner.os }}-${{ hashFiles('test/**') }}
+          restore-keys: hegel-${{ runner.os }}-
       - run: flutter test
 
   format:
@@ -53,7 +59,7 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - run: dart format --set-exit-if-changed lib/ test/
+      - run: dart format --set-exit-if-changed lib/ test/ example/
 
   dry-run:
     name: Publish dry-run

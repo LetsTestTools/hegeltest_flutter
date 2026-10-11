@@ -6,6 +6,8 @@ import 'package:hegeltest/hegeltest.dart';
 // ignore: implementation_imports
 import 'package:hegeltest/src/stateful/stateful_runner.dart';
 
+import 'env.dart';
+
 /// Property-based test function for Flutter, powered by Hegel's native engine.
 ///
 /// This is the Flutter equivalent of `hegelTest` from `package:hegeltest`.
@@ -51,13 +53,14 @@ void hegelFlutterTest(
   test(
     description,
     () async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
       await runner.run(
         body,
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -78,12 +81,6 @@ void hegelFlutterTest(
     onPlatform: onPlatform,
     retry: retry,
   );
-}
-
-int? _envSeed() {
-  final raw = Platform.environment['HEGEL_SEED'];
-  if (raw == null || raw.isEmpty) return null;
-  return int.tryParse(raw);
 }
 
 /// Stateful property-based test function for Flutter.
@@ -123,26 +120,34 @@ void hegelFlutterStatefulTest(
   test(
     description,
     () async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
 
       await runner.run(
         (tc) async {
           final machine = create();
+          var bodyThrew = false;
           try {
             await machine.setUp();
             await runStateMachine(lib, tc.ctx, tc.handle, machine, tc);
+          } catch (_) {
+            bodyThrew = true;
+            rethrow;
           } finally {
             try {
               await machine.tearDown();
             } catch (e, st) {
+              if (!bodyThrew) {
+                rethrow;
+              }
               stderr.writeln('[hegeltest_flutter] tearDown threw: $e\n$st');
             }
           }
         },
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -208,6 +213,7 @@ void hegelFlutterWidgetTest(
   testWidgets(
     description,
     (tester) async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
       await runner.run(
@@ -216,7 +222,7 @@ void hegelFlutterWidgetTest(
         },
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -273,13 +279,14 @@ Future<RunResult> runHegelFlutterTest(
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) async {
+  ensureFlutterNativeAssets();
   final lib = loadHegelLibrary();
   final runner = HegelRunner(lib);
   return runner.runWithResult(
     body,
     reproduceBlob: reproduce ?? config?.reproduce,
     testCases: testCases ?? config?.testCases,
-    seed: seed ?? config?.seed ?? _envSeed(),
+    seed: seed ?? config?.seed ?? envSeed(),
     derandomize: derandomize ?? config?.derandomize,
     phases: phases ?? config?.phases,
     verbosity: verbosity ?? config?.verbosity,

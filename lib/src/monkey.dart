@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
+
+import 'env.dart';
 
 /// Represents a single action performed by the monkey during a fuzzing run.
 class MonkeyStep {
@@ -109,6 +110,7 @@ void hegelFlutterMonkeyTest(
   int steps = 15,
   Duration pumpDuration = const Duration(milliseconds: 50),
   List<SemanticsAction>? allowedActions,
+  Generator<String>? textGenerator,
   FutureOr<void> Function(TestCase tc, WidgetTester tester)? invariant,
   FutureOr<void> Function(TestCase tc, WidgetTester tester, MonkeyStep step)?
   stepInvariant,
@@ -132,16 +134,27 @@ void hegelFlutterMonkeyTest(
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) {
+  if (steps < 0) {
+    throw ArgumentError.value(steps, 'steps', 'must be >= 0');
+  }
+
   testWidgets(
     description,
     (tester) async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
+      final effectiveTextGenerator = textGenerator ?? text();
 
       await runner.run(
         (tc) async {
           final widget = createWidget(tc);
           await tester.pumpWidget(widget);
+
+          final dynamic initialEx = tester.takeException();
+          if (initialEx != null) {
+            throw MonkeyFuzzException(steps: const [], cause: initialEx);
+          }
 
           final owner = tester.binding.rootPipelineOwner.semanticsOwner;
           if (owner == null) {
@@ -175,7 +188,10 @@ void hegelFlutterMonkeyTest(
 
             Object? actionArg;
             if (action == SemanticsAction.setText) {
-              actionArg = tc.draw(text(), label: 'step_${i + 1}_text_value');
+              actionArg = tc.draw(
+                effectiveTextGenerator,
+                label: 'step_${i + 1}_text_value',
+              );
               owner.performAction(node.id, action, actionArg);
             } else {
               owner.performAction(node.id, action);
@@ -223,7 +239,7 @@ void hegelFlutterMonkeyTest(
         },
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
-        seed: seed ?? config?.seed ?? _envSeed(),
+        seed: seed ?? config?.seed ?? envSeed(),
         derandomize: derandomize ?? config?.derandomize,
         phases: phases ?? config?.phases,
         verbosity: verbosity ?? config?.verbosity,
@@ -271,10 +287,4 @@ List<_CandidateAction> _collectCandidates(
 
   visit(root);
   return candidates;
-}
-
-int? _envSeed() {
-  final raw = Platform.environment['HEGEL_SEED'];
-  if (raw == null || raw.isEmpty) return null;
-  return int.tryParse(raw);
 }

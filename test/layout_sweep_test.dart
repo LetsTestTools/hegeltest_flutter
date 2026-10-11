@@ -35,8 +35,102 @@ void main() {
       },
       invariant: (tc, tester, sample) async {
         expect(find.byType(SingleChildScrollView), findsOneWidget);
+        final BuildContext ctx = tester.element(find.byType(Scaffold));
+        expect(Directionality.of(ctx), equals(sample.textDirection));
+        expect(
+          MediaQuery.of(ctx).viewInsets.bottom,
+          equals(sample.viewInsetsBottom),
+        );
+        expect(
+          MediaQuery.of(ctx).platformBrightness,
+          equals(sample.brightness),
+        );
+        expect(
+          MediaQuery.textScalerOf(ctx),
+          equals(TextScaler.linear(sample.textScale)),
+        );
       },
     );
+
+    test('LayoutSweepConfig.validate rejects invalid configurations', () {
+      expect(
+        () => const LayoutSweepConfig(minWidth: 0).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(maxWidth: double.infinity).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(minWidth: 800, maxWidth: 400).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          minWidth: 320.9,
+          maxWidth: 320.1,
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () =>
+            const LayoutSweepConfig(minHeight: 900, maxHeight: 500).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          minHeight: 480.8,
+          maxHeight: 480.2,
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          minTextScale: 2.5,
+          maxTextScale: 1.0,
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(maxTextScale: double.infinity).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          minTextScale: 1.004,
+          maxTextScale: 1.001,
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(textDirections: []).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(devicePixelRatios: [0.0]).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          devicePixelRatios: [double.infinity],
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(viewInsetsBottom: [-10.0]).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          viewInsetsBottom: [double.infinity],
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(brightnesses: []).validate(),
+        throwsArgumentError,
+      );
+    });
 
     testWidgets('layout sweep captures RenderFlex overflow', (tester) async {
       var detectedOverflow = false;
