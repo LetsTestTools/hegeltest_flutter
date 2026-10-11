@@ -382,6 +382,13 @@ void hegelFlutterLayoutSweepTest(
 
             if (invariant != null) {
               await invariant(tc, tester, sample);
+              final dynamic invariantEx = tester.takeException();
+              if (invariantEx != null) {
+                throw LayoutOverflowException(
+                  sample: sample,
+                  cause: invariantEx,
+                );
+              }
             }
           } finally {
             while (tester.takeException() != null) {}

@@ -218,21 +218,7 @@ void hegelFlutterWidgetTest(
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
       await runner.run(
-        (tc) async {
-          try {
-            await tester.pumpWidget(SizedBox.shrink(key: UniqueKey()));
-            await body(tc, tester);
-            final dynamic caughtEx = tester.takeException();
-            if (caughtEx != null) {
-              if (caughtEx is Error && caughtEx.stackTrace != null) {
-                Error.throwWithStackTrace(caughtEx, caughtEx.stackTrace!);
-              }
-              throw caughtEx as Object;
-            }
-          } finally {
-            while (tester.takeException() != null) {}
-          }
-        },
+        (tc) => _runWidgetIteration(tc, tester, body),
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,
         seed: seed ?? config?.seed ?? envSeed(),
@@ -256,6 +242,69 @@ void hegelFlutterWidgetTest(
     variant: variant,
     tags: tags,
     retry: retry,
+  );
+}
+
+Future<void> _runWidgetIteration(
+  TestCase tc,
+  WidgetTester tester,
+  FutureOr<void> Function(TestCase tc, WidgetTester tester) body,
+) async {
+  try {
+    await tester.pumpWidget(SizedBox.shrink(key: UniqueKey()));
+    await body(tc, tester);
+    final dynamic caughtEx = tester.takeException();
+    if (caughtEx != null) {
+      if (caughtEx is Error && caughtEx.stackTrace != null) {
+        Error.throwWithStackTrace(caughtEx, caughtEx.stackTrace!);
+      }
+      throw caughtEx as Object;
+    }
+  } finally {
+    while (tester.takeException() != null) {}
+  }
+}
+
+/// Standalone property-based widget test runner for Flutter.
+///
+/// Runs [body] across property iterations using an existing [WidgetTester],
+/// isolating widget state and forwarding pending framework exceptions for
+/// shrinking. Returns a [RunResult] instead of throwing.
+Future<RunResult> runHegelFlutterWidgetTest(
+  WidgetTester tester,
+  FutureOr<void> Function(TestCase tc, WidgetTester tester) body, {
+  HegelConfig? config,
+  int? testCases,
+  int? seed,
+  bool? derandomize,
+  Set<Phase>? phases,
+  Verbosity? verbosity,
+  Set<HealthCheck>? suppressHealthChecks,
+  bool? reportMultipleFailures,
+  String? reproduce,
+  String? databaseKey,
+  bool? database,
+  String? databasePath,
+  FutureOr<void> Function()? setUpEach,
+  FutureOr<void> Function()? tearDownEach,
+}) {
+  return runHegelFlutterTest(
+    (tc) => _runWidgetIteration(tc, tester, body),
+    config: config,
+    testCases: testCases,
+    seed: seed,
+    derandomize: derandomize,
+    phases: phases,
+    verbosity: verbosity,
+    suppressHealthChecks: suppressHealthChecks,
+    reportMultipleFailures: reportMultipleFailures,
+    reproduce: reproduce,
+    databaseKey:
+        databaseKey ?? config?.databaseKey ?? 'runHegelFlutterWidgetTest',
+    database: database,
+    databasePath: databasePath,
+    setUpEach: setUpEach,
+    tearDownEach: tearDownEach,
   );
 }
 

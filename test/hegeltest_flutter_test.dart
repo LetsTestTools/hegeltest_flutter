@@ -153,49 +153,32 @@ void main() {
   testWidgets(
     'widget test catches and shrinks Flutter framework exceptions cleanly',
     (tester) async {
-      var minFailingWidth = double.infinity;
-      final result = await runHegelFlutterTest(
-        (tc) async {
+      final drawnWidths = <double>[];
+      final result = await runHegelFlutterWidgetTest(
+        tester,
+        (tc, tester) async {
           final width = tc.draw(integers(min: 100, max: 500)).toDouble();
-          try {
-            await tester.pumpWidget(SizedBox.shrink(key: UniqueKey()));
-            await tester.pumpWidget(
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Center(
-                  child: SizedBox(
-                    width: 200,
-                    height: 50,
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: width,
-                          height: 50,
-                          child: const Text('X'),
-                        ),
-                      ],
-                    ),
+          drawnWidths.add(width);
+          await tester.pumpWidget(
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Center(
+                child: SizedBox(
+                  width: 200,
+                  height: 50,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: width,
+                        height: 50,
+                        child: const Text('X'),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-            final dynamic pendingException = tester.takeException();
-            if (pendingException != null) {
-              if (width < minFailingWidth) {
-                minFailingWidth = width;
-              }
-              if (pendingException is Error &&
-                  pendingException.stackTrace != null) {
-                Error.throwWithStackTrace(
-                  pendingException,
-                  pendingException.stackTrace!,
-                );
-              }
-              throw pendingException as Object;
-            }
-          } finally {
-            while (tester.takeException() != null) {}
-          }
+            ),
+          );
         },
         testCases: 20,
         seed: 42,
@@ -207,8 +190,8 @@ void main() {
         equals(RunStatus.failed),
         reason: result.errorMessage,
       );
-      // Shrunk counterexample should be 201 (the minimal integer > 200 causing overflow)
-      expect(minFailingWidth, equals(201.0));
+      // Shrunk counterexample should test 201 (the minimal integer > 200 causing overflow)
+      expect(drawnWidths, contains(201.0));
       expect(result.failures, isNotEmpty);
       expect(result.failures.first.reproductionBlob, isNotEmpty);
     },

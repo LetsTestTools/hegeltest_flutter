@@ -225,6 +225,13 @@ void hegelFlutterMonkeyTest(
                     stackTrace: st,
                   );
                 }
+                final dynamic stepInvEx = tester.takeException();
+                if (stepInvEx != null) {
+                  throw MonkeyFuzzException(
+                    steps: stepHistory,
+                    cause: stepInvEx,
+                  );
+                }
               }
             }
 
@@ -237,6 +244,10 @@ void hegelFlutterMonkeyTest(
                   cause: e,
                   stackTrace: st,
                 );
+              }
+              final dynamic invEx = tester.takeException();
+              if (invEx != null) {
+                throw MonkeyFuzzException(steps: stepHistory, cause: invEx);
               }
             }
           } finally {
