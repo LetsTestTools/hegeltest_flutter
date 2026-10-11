@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
 // ignore: implementation_imports
@@ -218,7 +219,19 @@ void hegelFlutterWidgetTest(
       final runner = HegelRunner(lib);
       await runner.run(
         (tc) async {
-          await body(tc, tester);
+          try {
+            await tester.pumpWidget(SizedBox.shrink(key: UniqueKey()));
+            await body(tc, tester);
+            final dynamic caughtEx = tester.takeException();
+            if (caughtEx != null) {
+              if (caughtEx is Error && caughtEx.stackTrace != null) {
+                Error.throwWithStackTrace(caughtEx, caughtEx.stackTrace!);
+              }
+              throw caughtEx as Object;
+            }
+          } finally {
+            while (tester.takeException() != null) {}
+          }
         },
         reproduceBlob: reproduce ?? config?.reproduce,
         testCases: testCases ?? config?.testCases,

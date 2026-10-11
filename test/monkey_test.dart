@@ -49,17 +49,28 @@ void main() {
       );
     });
 
-    testWidgets('captures crash and formats step trace', (tester) async {
+    hegelFlutterMonkeyTest(
+      'resets StatefulWidget state between iterations so state never leaks across runs',
+      // _BuggyCounterApp throws if _count > 2. With steps: 2, a fresh state per
+      // iteration can at most reach _count == 2. Without KeyedSubtree isolation,
+      // _count would accumulate across the 5 iterations and crash on iteration 2.
+      createWidget: (tc) => const _BuggyCounterApp(),
+      steps: 2,
+      testCases: 5,
+      database: false,
+    );
+
+    testWidgets('captures crash and formats MonkeyFuzzException step trace', (
+      tester,
+    ) async {
       var threw = false;
       try {
-        // We run a monkey test on an app that throws when counter exceeds 2
-        final widget = _BuggyCounterApp();
+        const widget = _BuggyCounterApp();
         await tester.pumpWidget(widget);
 
         final owner = tester.binding.rootPipelineOwner.semanticsOwner;
         expect(owner, isNotNull);
 
-        // Find and tap until it throws
         for (var i = 0; i < 5; i++) {
           final buttonFinder = find.widgetWithText(ElevatedButton, 'Increment');
           if (buttonFinder.evaluate().isNotEmpty) {
@@ -68,8 +79,22 @@ void main() {
             final ex = tester.takeException();
             if (ex != null) {
               threw = true;
+              final monkeyEx = MonkeyFuzzException(
+                steps: const [
+                  MonkeyStep(
+                    nodeId: 1,
+                    label: 'Increment',
+                    action: SemanticsAction.tap,
+                  ),
+                ],
+                cause: ex,
+              );
               expect(
-                ex.toString(),
+                monkeyEx.toString(),
+                contains('1. tap on "Increment" (id=1)'),
+              );
+              expect(
+                monkeyEx.toString(),
                 contains('Intentional crash at counter > 2'),
               );
               break;
@@ -119,6 +144,8 @@ class _SampleCounterAppState extends State<_SampleCounterApp> {
 }
 
 class _BuggyCounterApp extends StatefulWidget {
+  const _BuggyCounterApp();
+
   @override
   State<_BuggyCounterApp> createState() => _BuggyCounterAppState();
 }

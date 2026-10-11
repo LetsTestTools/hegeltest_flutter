@@ -134,6 +134,115 @@ void main() {
 
     expect(num, greaterThanOrEqualTo(0));
   });
+
+  hegelFlutterWidgetTest(
+    'resets StatefulWidget state between iterations',
+    testCases: 5,
+    (tc, tester) async {
+      final delta = tc.draw(integers(min: 1, max: 10));
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _StatefulAccumulator(delta: delta),
+        ),
+      );
+      expect(find.text('Total: $delta'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'widget test catches and shrinks Flutter framework exceptions cleanly',
+    (tester) async {
+      var minFailingWidth = double.infinity;
+      final result = await runHegelFlutterTest(
+        (tc) async {
+          final width = tc.draw(integers(min: 100, max: 500)).toDouble();
+          try {
+            await tester.pumpWidget(SizedBox.shrink(key: UniqueKey()));
+            await tester.pumpWidget(
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Center(
+                  child: SizedBox(
+                    width: 200,
+                    height: 50,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: width,
+                          height: 50,
+                          child: const Text('X'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+            final dynamic pendingException = tester.takeException();
+            if (pendingException != null) {
+              if (width < minFailingWidth) {
+                minFailingWidth = width;
+              }
+              if (pendingException is Error &&
+                  pendingException.stackTrace != null) {
+                Error.throwWithStackTrace(
+                  pendingException,
+                  pendingException.stackTrace!,
+                );
+              }
+              throw pendingException as Object;
+            }
+          } finally {
+            while (tester.takeException() != null) {}
+          }
+        },
+        testCases: 20,
+        seed: 42,
+        database: false,
+      );
+
+      expect(
+        result.status,
+        equals(RunStatus.failed),
+        reason: result.errorMessage,
+      );
+      // Shrunk counterexample should be 201 (the minimal integer > 200 causing overflow)
+      expect(minFailingWidth, equals(201.0));
+      expect(result.failures, isNotEmpty);
+      expect(result.failures.first.reproductionBlob, isNotEmpty);
+    },
+  );
+}
+
+class _StatefulAccumulator extends StatefulWidget {
+  final int delta;
+  const _StatefulAccumulator({required this.delta});
+
+  @override
+  State<_StatefulAccumulator> createState() => _StatefulAccumulatorState();
+}
+
+class _StatefulAccumulatorState extends State<_StatefulAccumulator> {
+  int _total = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _total += widget.delta;
+  }
+
+  @override
+  void didUpdateWidget(covariant _StatefulAccumulator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If State were reused across iterations, _total would accumulate!
+    _total += widget.delta;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text('Total: $_total');
+  }
 }
 
 class _CounterMachine extends StateMachine {

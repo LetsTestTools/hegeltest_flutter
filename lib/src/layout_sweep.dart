@@ -370,15 +370,21 @@ void hegelFlutterLayoutSweepTest(
             );
           }
 
-          await tester.pumpWidget(root);
+          try {
+            await tester.pumpWidget(
+              KeyedSubtree(key: UniqueKey(), child: root),
+            );
 
-          final dynamic caughtEx = tester.takeException();
-          if (caughtEx != null) {
-            throw LayoutOverflowException(sample: sample, cause: caughtEx);
-          }
+            final dynamic caughtEx = tester.takeException();
+            if (caughtEx != null) {
+              throw LayoutOverflowException(sample: sample, cause: caughtEx);
+            }
 
-          if (invariant != null) {
-            await invariant(tc, tester, sample);
+            if (invariant != null) {
+              await invariant(tc, tester, sample);
+            }
+          } finally {
+            while (tester.takeException() != null) {}
           }
         },
         reproduceBlob: reproduce ?? config?.reproduce,

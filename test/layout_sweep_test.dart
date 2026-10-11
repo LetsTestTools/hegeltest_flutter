@@ -169,5 +169,52 @@ void main() {
 
       expect(detectedOverflow, isTrue);
     });
+
+    hegelFlutterLayoutSweepTest(
+      'resets StatefulWidget state between layout sweep iterations',
+      testCases: 5,
+      builder: (tc, sample) => const _InitCounterWidget(),
+      invariant: (tc, tester, sample) async {
+        expect(find.text('Builds since init: 1'), findsOneWidget);
+      },
+    );
+
+    test('LayoutOverflowException formats sample details', () {
+      const sample = LayoutSample(
+        width: 320,
+        height: 480,
+        textScale: 1.5,
+        textDirection: TextDirection.rtl,
+        devicePixelRatio: 2.0,
+        viewInsetsBottom: 280.0,
+        brightness: Brightness.dark,
+      );
+      final ex = LayoutOverflowException(
+        sample: sample,
+        cause: 'RenderFlex overflowed by 42 pixels',
+      );
+      final formatted = ex.toString();
+      expect(formatted, contains('320.0x480.0'));
+      expect(formatted, contains('textScale: 1.50x'));
+      expect(formatted, contains('rtl'));
+      expect(formatted, contains('RenderFlex overflowed by 42 pixels'));
+    });
   });
+}
+
+class _InitCounterWidget extends StatefulWidget {
+  const _InitCounterWidget();
+
+  @override
+  State<_InitCounterWidget> createState() => _InitCounterWidgetState();
+}
+
+class _InitCounterWidgetState extends State<_InitCounterWidget> {
+  int _builds = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    _builds++;
+    return Scaffold(body: Text('Builds since init: $_builds'));
+  }
 }
