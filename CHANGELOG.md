@@ -1,3 +1,13 @@
+## 0.9.1
+
+- **Fix**: Inject `MediaQuery` and `Directionality` inside `MaterialApp.builder` in `hegelFlutterLayoutSweepTest()` so routes, dialogs, and overlays inherit swept viewport sizes, text scales, brightness, and keyboard insets instead of being overwritten by `MaterialApp`'s root view query.
+- **Fix**: Synchronize `tester.view.viewInsets` and `tester.platformDispatcher` overrides in `hegelFlutterLayoutSweepTest()` and reset all view/dispatcher overrides on teardown.
+- **New**: Add `LayoutSweepConfig.validate()` to fail fast with `ArgumentError` on non-positive, non-finite, inverted, or empty sweep bounds and option lists.
+- **New**: Add optional `Generator<String>? textGenerator` parameter to `hegelFlutterMonkeyTest()` for customizing `SemanticsAction.setText` inputs.
+- **Fix**: Validate `steps >= 0` and check `tester.takeException()` immediately after the initial `pumpWidget` in `hegelFlutterMonkeyTest()`.
+- **Fix**: Propagate `machine.tearDown()` failures in `hegelFlutterStatefulTest()` when the test body succeeded, and validate `HEGEL_SEED` as an integer.
+- **Fix**: Automatically stage the bundled `libhegel` binary into `.dart_tool/lib/` atomically under `flutter test` so tests run out-of-the-box without requiring `HEGEL_LIBHEGEL_PATH`.
+
 ## 0.9.0
 
 - **New**: Bump `hegeltest` dependency to `^0.9.0`, bringing `tc.classify()`, `tc.cover()`, `sampledWeighted()`, and `oneOfWeighted()` to Flutter
