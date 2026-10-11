@@ -58,7 +58,18 @@ void main() {
         throwsArgumentError,
       );
       expect(
+        () => const LayoutSweepConfig(maxWidth: double.infinity).validate(),
+        throwsArgumentError,
+      );
+      expect(
         () => const LayoutSweepConfig(minWidth: 800, maxWidth: 400).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          minWidth: 320.9,
+          maxWidth: 320.1,
+        ).validate(),
         throwsArgumentError,
       );
       expect(
@@ -68,8 +79,26 @@ void main() {
       );
       expect(
         () => const LayoutSweepConfig(
+          minHeight: 480.8,
+          maxHeight: 480.2,
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
           minTextScale: 2.5,
           maxTextScale: 1.0,
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(maxTextScale: double.infinity).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          minTextScale: 1.004,
+          maxTextScale: 1.001,
         ).validate(),
         throwsArgumentError,
       );
@@ -82,7 +111,19 @@ void main() {
         throwsArgumentError,
       );
       expect(
+        () => const LayoutSweepConfig(
+          devicePixelRatios: [double.infinity],
+        ).validate(),
+        throwsArgumentError,
+      );
+      expect(
         () => const LayoutSweepConfig(viewInsetsBottom: [-10.0]).validate(),
+        throwsArgumentError,
+      );
+      expect(
+        () => const LayoutSweepConfig(
+          viewInsetsBottom: [double.infinity],
+        ).validate(),
         throwsArgumentError,
       );
       expect(

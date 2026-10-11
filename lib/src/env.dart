@@ -35,10 +35,10 @@ void ensureFlutterNativeAssets() {
 }
 
 void _stageBundledBinaryIfNeeded() {
+  File? tempFile;
   try {
     final libName = _platformLibName();
     final targetFile = File('.dart_tool/lib/$libName');
-    if (targetFile.existsSync()) return;
 
     final packageRootUri = _resolveHegeltestPackageRoot();
     if (packageRootUri == null) return;
@@ -48,10 +48,33 @@ void _stageBundledBinaryIfNeeded() {
     final bundledFile = File.fromUri(bundledUri);
     if (!bundledFile.existsSync()) return;
 
+    final expectedLength = bundledFile.lengthSync();
+    if (targetFile.existsSync() && targetFile.lengthSync() == expectedLength) {
+      return;
+    }
+
     targetFile.parent.createSync(recursive: true);
-    bundledFile.copySync(targetFile.path);
+    tempFile = File(
+      '${targetFile.path}.tmp.$pid.${DateTime.now().microsecondsSinceEpoch}',
+    );
+    bundledFile.copySync(tempFile.path);
+    try {
+      tempFile.renameSync(targetFile.path);
+    } on FileSystemException {
+      // On Windows, renameSync may fail if another process concurrently published targetFile.
+      if (!targetFile.existsSync() ||
+          targetFile.lengthSync() != expectedLength) {
+        rethrow;
+      }
+    }
   } catch (_) {
     // Best-effort staging; loadHegelLibrary() will report a clear error if loading fails.
+  } finally {
+    if (tempFile != null && tempFile.existsSync()) {
+      try {
+        tempFile.deleteSync();
+      } catch (_) {}
+    }
   }
 }
 

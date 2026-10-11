@@ -53,40 +53,64 @@ class LayoutSweepConfig {
 
   /// Validates that all sweep bounds and option lists are well-formed.
   ///
-  /// Throws [ArgumentError] if any bound is non-positive, inverted, or empty.
+  /// Throws [ArgumentError] if any bound is non-positive, non-finite, inverted, or empty.
   void validate() {
-    if (minWidth <= 0 || minWidth.isNaN || maxWidth.isNaN) {
+    if (minWidth <= 0 || !minWidth.isFinite) {
       throw ArgumentError.value(
         minWidth,
         'minWidth',
         'must be positive and finite',
       );
     }
-    if (minWidth.toInt() > maxWidth.toInt()) {
-      throw ArgumentError(
-        'LayoutSweepConfig: minWidth ($minWidth) must be <= maxWidth ($maxWidth)',
+    if (maxWidth <= 0 || !maxWidth.isFinite) {
+      throw ArgumentError.value(
+        maxWidth,
+        'maxWidth',
+        'must be positive and finite',
       );
     }
-    if (minHeight <= 0 || minHeight.isNaN || maxHeight.isNaN) {
+    if (minWidth > maxWidth || minWidth.ceil() > maxWidth.floor()) {
+      throw ArgumentError(
+        'LayoutSweepConfig: minWidth ($minWidth) must be <= maxWidth ($maxWidth) '
+        'and span at least one integer logical pixel',
+      );
+    }
+    if (minHeight <= 0 || !minHeight.isFinite) {
       throw ArgumentError.value(
         minHeight,
         'minHeight',
         'must be positive and finite',
       );
     }
-    if (minHeight.toInt() > maxHeight.toInt()) {
-      throw ArgumentError(
-        'LayoutSweepConfig: minHeight ($minHeight) must be <= maxHeight ($maxHeight)',
+    if (maxHeight <= 0 || !maxHeight.isFinite) {
+      throw ArgumentError.value(
+        maxHeight,
+        'maxHeight',
+        'must be positive and finite',
       );
     }
-    if (minTextScale <= 0 || minTextScale.isNaN || maxTextScale.isNaN) {
+    if (minHeight > maxHeight || minHeight.ceil() > maxHeight.floor()) {
+      throw ArgumentError(
+        'LayoutSweepConfig: minHeight ($minHeight) must be <= maxHeight ($maxHeight) '
+        'and span at least one integer logical pixel',
+      );
+    }
+    if (minTextScale <= 0 || !minTextScale.isFinite) {
       throw ArgumentError.value(
         minTextScale,
         'minTextScale',
         'must be positive and finite',
       );
     }
-    if ((minTextScale * 100).round() > (maxTextScale * 100).round()) {
+    if (maxTextScale <= 0 || !maxTextScale.isFinite) {
+      throw ArgumentError.value(
+        maxTextScale,
+        'maxTextScale',
+        'must be positive and finite',
+      );
+    }
+    if (minTextScale > maxTextScale ||
+        (minTextScale * 100).round() > (maxTextScale * 100).round()) {
       throw ArgumentError(
         'LayoutSweepConfig: minTextScale ($minTextScale) must be <= maxTextScale ($maxTextScale)',
       );
@@ -99,19 +123,19 @@ class LayoutSweepConfig {
       );
     }
     if (devicePixelRatios.isEmpty ||
-        devicePixelRatios.any((dpr) => dpr <= 0 || dpr.isNaN)) {
+        devicePixelRatios.any((dpr) => dpr <= 0 || !dpr.isFinite)) {
       throw ArgumentError.value(
         devicePixelRatios,
         'devicePixelRatios',
-        'must be non-empty with positive values',
+        'must be non-empty with positive finite values',
       );
     }
     if (viewInsetsBottom.isEmpty ||
-        viewInsetsBottom.any((inset) => inset < 0 || inset.isNaN)) {
+        viewInsetsBottom.any((inset) => inset < 0 || !inset.isFinite)) {
       throw ArgumentError.value(
         viewInsetsBottom,
         'viewInsetsBottom',
-        'must be non-empty with non-negative values',
+        'must be non-empty with non-negative finite values',
       );
     }
     if (brightnesses.isEmpty) {
@@ -242,8 +266,8 @@ void hegelFlutterLayoutSweepTest(
           final width = tc
               .draw(
                 integers(
-                  min: sweepConfig.minWidth.toInt(),
-                  max: sweepConfig.maxWidth.toInt(),
+                  min: sweepConfig.minWidth.ceil(),
+                  max: sweepConfig.maxWidth.floor(),
                 ),
                 label: 'viewport_width',
               )
@@ -252,8 +276,8 @@ void hegelFlutterLayoutSweepTest(
           final height = tc
               .draw(
                 integers(
-                  min: sweepConfig.minHeight.toInt(),
-                  max: sweepConfig.maxHeight.toInt(),
+                  min: sweepConfig.minHeight.ceil(),
+                  max: sweepConfig.maxHeight.floor(),
                 ),
                 label: 'viewport_height',
               )
