@@ -53,6 +53,7 @@ void hegelFlutterTest(
   test(
     description,
     () async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
       await runner.run(
@@ -119,19 +120,27 @@ void hegelFlutterStatefulTest(
   test(
     description,
     () async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
 
       await runner.run(
         (tc) async {
           final machine = create();
+          var bodyThrew = false;
           try {
             await machine.setUp();
             await runStateMachine(lib, tc.ctx, tc.handle, machine, tc);
+          } catch (_) {
+            bodyThrew = true;
+            rethrow;
           } finally {
             try {
               await machine.tearDown();
             } catch (e, st) {
+              if (!bodyThrew) {
+                rethrow;
+              }
               stderr.writeln('[hegeltest_flutter] tearDown threw: $e\n$st');
             }
           }
@@ -204,6 +213,7 @@ void hegelFlutterWidgetTest(
   testWidgets(
     description,
     (tester) async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
       await runner.run(
@@ -269,6 +279,7 @@ Future<RunResult> runHegelFlutterTest(
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) async {
+  ensureFlutterNativeAssets();
   final lib = loadHegelLibrary();
   final runner = HegelRunner(lib);
   return runner.runWithResult(

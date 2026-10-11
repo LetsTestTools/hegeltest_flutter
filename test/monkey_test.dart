@@ -25,6 +25,30 @@ void main() {
       },
     );
 
+    hegelFlutterMonkeyTest(
+      'uses custom textGenerator for setText actions',
+      createWidget: (tc) => const _SampleCounterApp(),
+      steps: 5,
+      testCases: 3,
+      allowedActions: [SemanticsAction.setText],
+      textGenerator: fromRegex(r'^[A-Z]{4}$'),
+      stepInvariant: (tc, tester, step) async {
+        expect(step.action, equals(SemanticsAction.setText));
+        expect(step.argument, matches(RegExp(r'^[A-Z]{4}$')));
+      },
+    );
+
+    test('rejects negative steps', () {
+      expect(
+        () => hegelFlutterMonkeyTest(
+          'invalid steps',
+          createWidget: (_) => const SizedBox(),
+          steps: -1,
+        ),
+        throwsArgumentError,
+      );
+    });
+
     testWidgets('captures crash and formats step trace', (tester) async {
       var threw = false;
       try {

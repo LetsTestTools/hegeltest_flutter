@@ -110,6 +110,7 @@ void hegelFlutterMonkeyTest(
   int steps = 15,
   Duration pumpDuration = const Duration(milliseconds: 50),
   List<SemanticsAction>? allowedActions,
+  Generator<String>? textGenerator,
   FutureOr<void> Function(TestCase tc, WidgetTester tester)? invariant,
   FutureOr<void> Function(TestCase tc, WidgetTester tester, MonkeyStep step)?
   stepInvariant,
@@ -133,16 +134,27 @@ void hegelFlutterMonkeyTest(
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) {
+  if (steps < 0) {
+    throw ArgumentError.value(steps, 'steps', 'must be >= 0');
+  }
+
   testWidgets(
     description,
     (tester) async {
+      ensureFlutterNativeAssets();
       final lib = loadHegelLibrary();
       final runner = HegelRunner(lib);
+      final effectiveTextGenerator = textGenerator ?? text();
 
       await runner.run(
         (tc) async {
           final widget = createWidget(tc);
           await tester.pumpWidget(widget);
+
+          final dynamic initialEx = tester.takeException();
+          if (initialEx != null) {
+            throw MonkeyFuzzException(steps: const [], cause: initialEx);
+          }
 
           final owner = tester.binding.rootPipelineOwner.semanticsOwner;
           if (owner == null) {
@@ -176,7 +188,10 @@ void hegelFlutterMonkeyTest(
 
             Object? actionArg;
             if (action == SemanticsAction.setText) {
-              actionArg = tc.draw(text(), label: 'step_${i + 1}_text_value');
+              actionArg = tc.draw(
+                effectiveTextGenerator,
+                label: 'step_${i + 1}_text_value',
+              );
               owner.performAction(node.id, action, actionArg);
             } else {
               owner.performAction(node.id, action);
