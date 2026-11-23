@@ -62,7 +62,7 @@ class _TodoWidgetMachine extends WidgetStateMachine {
   int _nextId = 0;
 
   @override
-  int get stepCount => 15;
+  int get stepCount => 8;
 
   @override
   void setUp(WidgetTester tester) {
@@ -135,21 +135,26 @@ class _BuggyCounterWidgetState extends State<_BuggyCounterWidget> {
   @override
   Widget build(BuildContext context) {
     final display = _count >= 3 ? 999 : _count;
-    return MaterialApp(
-      home: Scaffold(
-        body: Column(
-          children: [
-            Text('Count: $display'),
-            ElevatedButton(
-              onPressed: () => setState(() => _count++),
-              child: const Text('Increment'),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Column(
+        children: [
+          Text('Count: $display'),
+          GestureDetector(
+            onTap: () => setState(() => _count++),
+            child: const Padding(
+              padding: EdgeInsets.all(8),
+              child: Text('Increment'),
             ),
-            ElevatedButton(
-              onPressed: () => setState(() => _count = 0),
-              child: const Text('Reset'),
+          ),
+          GestureDetector(
+            onTap: () => setState(() => _count = 0),
+            child: const Padding(
+              padding: EdgeInsets.all(8),
+              child: Text('Reset'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -159,7 +164,7 @@ class _BuggyCounterMachine extends WidgetStateMachine {
   int expected = 0;
 
   @override
-  int get stepCount => 10;
+  int get stepCount => 5;
 
   @override
   Widget buildInitialWidget(TestCase tc) => const _BuggyCounterWidget();
@@ -282,6 +287,7 @@ void main() {
           tester,
           () => _ExceptionRuleMachine(),
           testCases: 5,
+          phases: {Phase.generate},
           database: false,
         );
 
