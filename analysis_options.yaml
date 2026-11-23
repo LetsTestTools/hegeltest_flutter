@@ -1,5 +1,10 @@
 analyzer:
   exclude:
     - build/**
+  errors:
+    # Flutter 3.50+ deprecates package:flutter/material.dart in favor of
+    # package:material_ui; keep deprecated_member_use ignored while supporting
+    # Flutter >=3.38.0.
+    deprecated_member_use: ignore
 include: package:flutter_lints/flutter.yaml
 

@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   analyze:
     name: Analyze
@@ -25,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14       # Apple Silicon
+          - os: macos-latest # Apple Silicon
           - os: ubuntu-latest  # Linux x64
           - os: windows-latest # Windows x64
     steps:

@@ -17,13 +17,19 @@
 /// ```
 library;
 
-// Re-export all generators and types from hegeltest.
+// Re-export generators from hegeltest and Flutter value generators.
 export 'package:hegeltest/hegeltest.dart'
     hide hegelTest, hegelStatefulTest; // Hide the package:test versions
 
-export 'package:hegeltest/generators.dart';
+export 'generators.dart';
 
 // Export Flutter-compatible test functions.
+export 'src/a11y.dart'
+    show
+        AccessibilityViolationException,
+        kDefaultA11yGuidelines,
+        checkAccessibilityGuidelines;
+
 export 'src/flutter_runner.dart'
     show
         hegelFlutterTest,
@@ -46,4 +52,19 @@ export 'src/monkey.dart'
         MonkeyFuzzException,
         kDefaultMonkeyActions;
 
+export 'src/stateful_widget.dart'
+    show
+        WidgetStateMachine,
+        WidgetStateRule,
+        WidgetStateInvariant,
+        hegelFlutterStatefulWidgetTest,
+        runHegelFlutterStatefulWidgetTest;
+
 export 'package:flutter/rendering.dart' show SemanticsAction;
+export 'package:flutter_test/flutter_test.dart'
+    show
+        AccessibilityGuideline,
+        androidTapTargetGuideline,
+        iOSTapTargetGuideline,
+        labeledTapTargetGuideline,
+        textContrastGuideline;

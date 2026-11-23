@@ -14,7 +14,7 @@ Flutter integration for [hegeltest](https://pub.dev/packages/hegeltest) — prop
 
 ```yaml
 dev_dependencies:
-  hegeltest_flutter: ^0.9.0
+  hegeltest_flutter: ^0.10.0
   flutter_test:
     sdk: flutter
 ```
@@ -56,9 +56,16 @@ All generators from `package:hegeltest` are re-exported:
 - **Text**: `text()`, `fromRegex()`, `emails()`, `urls()`, `uuids()`
 - **Collections**: `lists()`, `sets()`, `maps()`
 - **Combinators**: `oneOf()`, `oneOfWeighted()`, `frequency()`, `sampled()`, `sampledWeighted()`, `nullable()`, `tuples2/3/4()`
-- **Temporal**: `dates()`, `times()`, `dateTimes()`
+- **Temporal**: `dates()`, `times()`, `dateTimes()`, `durations()`
 - **Network**: `ipv4Addresses()`, `ipv6Addresses()`
 - **Bytes**: `bytes()`
+
+Flutter-specific value generators are also included (or via `import 'package:hegeltest_flutter/generators.dart';`):
+
+- **Geometry & Layout**: `offsets()`, `sizes()`, `edgeInsets()`, `boxConstraints()`, `borderRadii()`, `alignments()`
+- **Theming & Localization**: `colors()`, `brightnesses()`, `themeModes()`, `locales()`, `textDirections()`, `textScalers()`
+
+*Zero-config native loading:* `@Native` code assets resolve automatically under `flutter test` with no extra setup or `HEGEL_LIBHEGEL_PATH` environment variable.
 
 ## Stateful Testing
 
@@ -162,6 +169,53 @@ void main() {
   });
 }
 ```
+
+## Stateful Widget Testing
+
+Use `hegelFlutterStatefulWidgetTest()` and `WidgetStateMachine` to fuzz sequences of UI interactions (`WidgetTester` actions + drawn inputs), verify UI/model invariants at initial state, after steps, and on final state, and automatically capture `tc.note()` step logs:
+
+```dart
+class CounterWidgetMachine extends WidgetStateMachine {
+  int model = 0;
+
+  @override
+  Widget buildInitialWidget(TestCase tc) => const _CounterDemoApp();
+
+  @override
+  List<WidgetStateRule> get rules => [
+    WidgetStateRule('tap increment', execute: (tester, tc) async {
+      await tester.tap(find.text('Increment'));
+      await tester.pump();
+      model++;
+    }),
+  ];
+
+  @override
+  List<WidgetStateInvariant> get invariants => [
+    WidgetStateInvariant('matches count', check: (tester, tc) async {
+      expect(find.text('Count: $model'), findsOneWidget);
+    }),
+  ];
+}
+
+void main() {
+  hegelFlutterStatefulWidgetTest('counter UI matches model', () => CounterWidgetMachine());
+}
+```
+
+## Accessibility Guideline Checks
+
+Verify Flutter's built-in `AccessibilityGuideline` checks (`kDefaultA11yGuidelines`: Android/iOS tap targets, labeled tap targets, and text contrast) standalone or directly inside `hegelFlutterLayoutSweepTest()` and `hegelFlutterMonkeyTest()`:
+
+```dart
+hegelFlutterLayoutSweepTest(
+  'accessible across viewports and text scales',
+  accessibilityGuidelines: [labeledTapTargetGuideline, textContrastGuideline],
+  builder: (tc, sample) => const UserProfileCard(),
+);
+```
+
+Violations throw `AccessibilityViolationException` with human-readable details for each failing guideline.
 
 ## Accessibility Monkey Fuzzing
 

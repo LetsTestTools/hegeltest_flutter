@@ -1,3 +1,11 @@
+## 0.10.0
+
+- **Engine Upgrade**: Upgraded `hegeltest` dependency to `^0.10.0` (`libhegel 0.53.1` with `@Native` code assets), bringing `durations()`, `tc.note()`, `RunErrorKind`, `StateRule.weight`, `StateInvariant.alwaysCheck`, `StateMachine.stepCount`, and clean 2-arg `runStateMachine(tc, machine)`.
+- **Native Assets**: Removed the `.dart_tool/lib/` binary staging workaround (`ensureFlutterNativeAssets()`) and internal `implementation_imports`; `flutter test` now resolves `@Native` code assets out-of-the-box without requiring `HEGEL_LIBHEGEL_PATH`.
+- **New**: Added 12 Flutter value generators (`colors()`, `offsets()`, `sizes()`, `edgeInsets()`, `boxConstraints()`, `borderRadii()`, `locales()`, `textDirections()`, `brightnesses()`, `themeModes()`, `textScalers()`, `alignments()`) and sub-path export `package:hegeltest_flutter/generators.dart`.
+- **New**: Added stateful Flutter widget property testing (`WidgetStateMachine`, `WidgetStateRule`, `WidgetStateInvariant`, `hegelFlutterStatefulWidgetTest()`, `runHegelFlutterStatefulWidgetTest()`) with automatic step trace notes (`tc.note()`), widget tree isolation, framework exception capture, and pool support.
+- **New**: Added accessibility guideline verification (`checkAccessibilityGuidelines()`, `kDefaultA11yGuidelines`, `AccessibilityViolationException`) and integrated optional `accessibilityGuidelines` checks into `hegelFlutterLayoutSweepTest()` and `hegelFlutterMonkeyTest()`.
+
 ## 0.9.1
 
 - **New**: Add `runHegelFlutterWidgetTest()` standalone widget property runner returning a `RunResult`.
