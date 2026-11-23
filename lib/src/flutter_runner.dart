@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
-// ignore: implementation_imports
-import 'package:hegeltest/src/stateful/stateful_runner.dart';
 
 import 'env.dart';
 
@@ -54,9 +52,7 @@ void hegelFlutterTest(
   test(
     description,
     () async {
-      ensureFlutterNativeAssets();
-      final lib = loadHegelLibrary();
-      final runner = HegelRunner(lib);
+      final runner = HegelRunner();
       await runner.run(
         body,
         reproduceBlob: reproduce ?? config?.reproduce,
@@ -121,9 +117,7 @@ void hegelFlutterStatefulTest(
   test(
     description,
     () async {
-      ensureFlutterNativeAssets();
-      final lib = loadHegelLibrary();
-      final runner = HegelRunner(lib);
+      final runner = HegelRunner();
 
       await runner.run(
         (tc) async {
@@ -131,7 +125,7 @@ void hegelFlutterStatefulTest(
           var bodyThrew = false;
           try {
             await machine.setUp();
-            await runStateMachine(lib, tc.ctx, tc.handle, machine, tc);
+            await runStateMachine(tc, machine);
           } catch (_) {
             bodyThrew = true;
             rethrow;
@@ -214,9 +208,7 @@ void hegelFlutterWidgetTest(
   testWidgets(
     description,
     (tester) async {
-      ensureFlutterNativeAssets();
-      final lib = loadHegelLibrary();
-      final runner = HegelRunner(lib);
+      final runner = HegelRunner();
       await runner.run(
         (tc) => _runWidgetIteration(tc, tester, body),
         reproduceBlob: reproduce ?? config?.reproduce,
@@ -341,9 +333,7 @@ Future<RunResult> runHegelFlutterTest(
   FutureOr<void> Function()? setUpEach,
   FutureOr<void> Function()? tearDownEach,
 }) async {
-  ensureFlutterNativeAssets();
-  final lib = loadHegelLibrary();
-  final runner = HegelRunner(lib);
+  final runner = HegelRunner();
   return runner.runWithResult(
     body,
     reproduceBlob: reproduce ?? config?.reproduce,

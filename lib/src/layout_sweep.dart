@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
 
+import 'a11y.dart';
 import 'env.dart';
 
 /// Configuration bounds and options for [hegelFlutterLayoutSweepTest].
@@ -222,6 +223,7 @@ void hegelFlutterLayoutSweepTest(
   )?
   invariant,
   bool wrapWithApp = true,
+  List<AccessibilityGuideline>? accessibilityGuidelines,
   dynamic skip,
   Timeout? timeout,
   dynamic tags,
@@ -247,9 +249,7 @@ void hegelFlutterLayoutSweepTest(
   testWidgets(
     description,
     (tester) async {
-      ensureFlutterNativeAssets();
-      final lib = loadHegelLibrary();
-      final runner = HegelRunner(lib);
+      final runner = HegelRunner();
 
       void resetViewOverrides() {
         tester.view.resetPhysicalSize();
@@ -378,6 +378,14 @@ void hegelFlutterLayoutSweepTest(
             final dynamic caughtEx = tester.takeException();
             if (caughtEx != null) {
               throw LayoutOverflowException(sample: sample, cause: caughtEx);
+            }
+
+            if (accessibilityGuidelines != null &&
+                accessibilityGuidelines.isNotEmpty) {
+              await checkAccessibilityGuidelines(
+                tester,
+                guidelines: accessibilityGuidelines,
+              );
             }
 
             if (invariant != null) {

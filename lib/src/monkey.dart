@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
 
+import 'a11y.dart';
 import 'env.dart';
 
 /// Represents a single action performed by the monkey during a fuzzing run.
@@ -114,6 +115,7 @@ void hegelFlutterMonkeyTest(
   FutureOr<void> Function(TestCase tc, WidgetTester tester)? invariant,
   FutureOr<void> Function(TestCase tc, WidgetTester tester, MonkeyStep step)?
   stepInvariant,
+  List<AccessibilityGuideline>? accessibilityGuidelines,
   dynamic skip,
   Timeout? timeout,
   dynamic tags,
@@ -141,9 +143,7 @@ void hegelFlutterMonkeyTest(
   testWidgets(
     description,
     (tester) async {
-      ensureFlutterNativeAssets();
-      final lib = loadHegelLibrary();
-      final runner = HegelRunner(lib);
+      final runner = HegelRunner();
       final effectiveTextGenerator = textGenerator ?? text();
 
       await runner.run(
@@ -157,6 +157,22 @@ void hegelFlutterMonkeyTest(
             final dynamic initialEx = tester.takeException();
             if (initialEx != null) {
               throw MonkeyFuzzException(steps: const [], cause: initialEx);
+            }
+
+            if (accessibilityGuidelines != null &&
+                accessibilityGuidelines.isNotEmpty) {
+              try {
+                await checkAccessibilityGuidelines(
+                  tester,
+                  guidelines: accessibilityGuidelines,
+                );
+              } catch (e, st) {
+                throw MonkeyFuzzException(
+                  steps: const [],
+                  cause: e,
+                  stackTrace: st,
+                );
+              }
             }
 
             final owner = tester.binding.rootPipelineOwner.semanticsOwner;
@@ -232,6 +248,22 @@ void hegelFlutterMonkeyTest(
                     cause: stepInvEx,
                   );
                 }
+              }
+            }
+
+            if (accessibilityGuidelines != null &&
+                accessibilityGuidelines.isNotEmpty) {
+              try {
+                await checkAccessibilityGuidelines(
+                  tester,
+                  guidelines: accessibilityGuidelines,
+                );
+              } catch (e, st) {
+                throw MonkeyFuzzException(
+                  steps: stepHistory,
+                  cause: e,
+                  stackTrace: st,
+                );
               }
             }
 

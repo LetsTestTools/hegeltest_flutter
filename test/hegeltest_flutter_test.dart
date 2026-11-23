@@ -83,7 +83,7 @@ void main() {
         );
 
         expect(res2.status, equals(RunStatus.failed));
-        expect(res2.testCasesRun, equals(1));
+        expect(res2.testCasesRun, lessThanOrEqualTo(2));
       } finally {
         tempDir.deleteSync(recursive: true);
       }

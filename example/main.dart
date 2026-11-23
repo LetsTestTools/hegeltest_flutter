@@ -182,6 +182,101 @@ void main() {
       );
     },
   );
+
+  // 9. Flutter value generators + accessibility guideline checks
+  hegelFlutterWidgetTest(
+    'generated box constraints and padding render cleanly',
+    (tc, tester) async {
+      final padding = tc.draw(edgeInsets(max: 24), label: 'padding');
+      final constraints = tc.draw(
+        boxConstraints(
+          minWidth: 100,
+          maxWidth: 320,
+          minHeight: 60,
+          maxHeight: 200,
+        ),
+        label: 'constraints',
+      );
+      final dir = tc.draw(textDirections(), label: 'direction');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Directionality(
+            textDirection: dir,
+            child: Scaffold(
+              body: Center(
+                child: ConstrainedBox(
+                  constraints: constraints,
+                  child: Padding(
+                    padding: padding,
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      child: const Text('Continue'),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await checkAccessibilityGuidelines(
+        tester,
+        guidelines: [labeledTapTargetGuideline],
+      );
+    },
+    testCases: 10,
+  );
+
+  // 10. Stateful widget property-based testing
+  hegelFlutterStatefulWidgetTest(
+    'counter app state machine preserves count across interactions',
+    () => _CounterWidgetMachine(),
+    testCases: 10,
+  );
+}
+
+class _CounterWidgetMachine extends WidgetStateMachine {
+  int expectedCount = 0;
+
+  @override
+  int get stepCount => 15;
+
+  @override
+  Widget buildInitialWidget(TestCase tc) => const _CounterDemoApp();
+
+  @override
+  List<WidgetStateRule> get rules => [
+    WidgetStateRule(
+      'tap increment',
+      weight: 3.0,
+      execute: (tester, tc) async {
+        await tester.tap(find.text('Increment'));
+        await tester.pump();
+        expectedCount++;
+      },
+    ),
+    WidgetStateRule(
+      'tap reset',
+      precondition: () => expectedCount > 0,
+      execute: (tester, tc) async {
+        await tester.tap(find.text('Reset'));
+        await tester.pump();
+        expectedCount = 0;
+      },
+    ),
+  ];
+
+  @override
+  List<WidgetStateInvariant> get invariants => [
+    WidgetStateInvariant(
+      'app bar matches expected count',
+      check: (tester, tc) {
+        expect(find.text('Count: $expectedCount'), findsOneWidget);
+      },
+    ),
+  ];
 }
 
 class _CounterDemoApp extends StatefulWidget {

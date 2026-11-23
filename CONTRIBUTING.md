@@ -21,7 +21,7 @@ To set up the project locally:
    # Activate git pre-commit hooks:
    lefthook install
    ```
-5. Run tests locally (see below for `HEGEL_LIBHEGEL_PATH`).
+5. Run tests locally with `flutter test`.
 
 ### Pre-commit Hooks (Lefthook)
 
@@ -36,17 +36,17 @@ This repository enforces formatting and static analysis on every commit via Left
 > **Why no Nix devShell for Flutter?**
 > Flutter requires write access to its internal cache (`bin/cache/`) and direct integration with host Xcode / CocoaPods toolchains on macOS. Placing Flutter inside a read-only Nix store frequently causes permission and code-signing conflicts. We recommend using your standard host Flutter install with Lefthook.
 
-### Running Tests Locally (HEGEL_LIBHEGEL_PATH)
+### Running Tests Locally & Custom Native Binaries
 
-Due to limitations in how `flutter test` resolves Native Assets from transitive dependencies during local execution, `hegeltest` requires the `HEGEL_LIBHEGEL_PATH` environment variable to load the native engine binary. Point it to the prebuilt binary in your local checkout or pub cache:
+`hegeltest` uses Dart `@Native` code assets, so `flutter test` automatically builds and loads the bundled `libhegel` engine binary with no environment variable setup required.
 
-```bash
-# macOS arm64:
-export HEGEL_LIBHEGEL_PATH=$(find $HOME/.pub-cache/hosted/pub.dev -path '*/hegeltest-*/native/macos_arm64/libhegel_c.dylib' | sort -V | tail -1)
-# Linux x64:
-export HEGEL_LIBHEGEL_PATH=$(find $HOME/.pub-cache/hosted/pub.dev -path '*/hegeltest-*/native/linux_x64/libhegel_c.so' | sort -V | tail -1)
+To point `hegeltest` at a custom local build of `libhegel`, configure `hooks.user_defines.hegeltest.libhegel_path` in `pubspec.yaml`:
 
-flutter test
+```yaml
+hooks:
+  user_defines:
+    hegeltest:
+      libhegel_path: /path/to/libhegel.dylib
 ```
 
 ## Making Changes
