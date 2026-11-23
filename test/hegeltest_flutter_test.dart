@@ -77,6 +77,7 @@ void main() {
             final x = tc.draw(integers(min: 1, max: 100));
             expect(x, isNegative);
           },
+          phases: {Phase.reuse},
           database: true,
           databasePath: dbPath,
           databaseKey: 'flutter_db_fail',

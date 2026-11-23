@@ -253,6 +253,61 @@ class _FailingTearDownMachine extends WidgetStateMachine {
   }
 }
 
+class _ThrowingTearDownPumpMachine extends WidgetStateMachine {
+  @override
+  int get stepCount => 2;
+
+  @override
+  Widget buildInitialWidget(TestCase tc) => const SizedBox();
+
+  @override
+  List<WidgetStateRule> get rules => [
+    WidgetStateRule('noop', execute: (tester, tc) async {}),
+  ];
+
+  @override
+  Future<void> tearDown(WidgetTester tester) async {
+    await tester.pumpWidget(
+      Builder(
+        builder: (_) {
+          throw FlutterError('tearDown widget boom');
+        },
+      ),
+    );
+  }
+}
+
+class _DisposeThrowsWidget extends StatefulWidget {
+  const _DisposeThrowsWidget();
+
+  @override
+  State<_DisposeThrowsWidget> createState() => _DisposeThrowsWidgetState();
+}
+
+class _DisposeThrowsWidgetState extends State<_DisposeThrowsWidget> {
+  @override
+  void dispose() {
+    super.dispose();
+    throw FlutterError('dispose widget boom');
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox();
+}
+
+class _ThrowingDisposeMachine extends WidgetStateMachine {
+  @override
+  int get stepCount => 2;
+
+  @override
+  Widget buildInitialWidget(TestCase tc) => const _DisposeThrowsWidget();
+
+  @override
+  List<WidgetStateRule> get rules => [
+    WidgetStateRule('noop', execute: (tester, tc) async {}),
+  ];
+}
+
 void main() {
   group('WidgetStateMachine & hegelFlutterStatefulWidgetTest', () {
     hegelFlutterStatefulWidgetTest(
@@ -312,6 +367,37 @@ void main() {
 
       expect(result.status, equals(RunStatus.failed));
       expect(result.failures.first.message, contains('widget tearDown failed'));
+    });
+
+    testWidgets(
+      'propagates pending framework exception pumped during tearDown',
+      (tester) async {
+        final result = await runHegelFlutterStatefulWidgetTest(
+          tester,
+          () => _ThrowingTearDownPumpMachine(),
+          testCases: 2,
+          phases: {Phase.generate},
+          database: false,
+        );
+
+        expect(result.status, equals(RunStatus.failed));
+        expect(result.failures.first.message, contains('tearDown widget boom'));
+      },
+    );
+
+    testWidgets('propagates framework exception thrown during widget dispose', (
+      tester,
+    ) async {
+      final result = await runHegelFlutterStatefulWidgetTest(
+        tester,
+        () => _ThrowingDisposeMachine(),
+        testCases: 2,
+        phases: {Phase.generate},
+        database: false,
+      );
+
+      expect(result.status, equals(RunStatus.failed));
+      expect(result.failures.first.message, contains('dispose widget boom'));
     });
 
     test('validates rule weight and createPool lifecycle', () {

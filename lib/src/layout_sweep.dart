@@ -386,6 +386,10 @@ void hegelFlutterLayoutSweepTest(
                 tester,
                 guidelines: accessibilityGuidelines,
               );
+              final dynamic a11yEx = tester.takeException();
+              if (a11yEx != null) {
+                throw LayoutOverflowException(sample: sample, cause: a11yEx);
+              }
             }
 
             if (invariant != null) {

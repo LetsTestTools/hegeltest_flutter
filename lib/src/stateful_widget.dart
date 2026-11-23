@@ -136,13 +136,28 @@ class _WidgetStateMachineAdapter extends StateMachine {
   ];
 }
 
+Never _throwCapturedException(Object caughtEx, [StackTrace? fallbackStack]) {
+  if (caughtEx is Error && caughtEx.stackTrace != null) {
+    Error.throwWithStackTrace(caughtEx, caughtEx.stackTrace!);
+  }
+  if (fallbackStack != null) {
+    Error.throwWithStackTrace(caughtEx, fallbackStack);
+  }
+  throw caughtEx;
+}
+
 void _rethrowPendingWidgetException(WidgetTester tester) {
   final dynamic caughtEx = tester.takeException();
   if (caughtEx != null) {
-    if (caughtEx is Error && caughtEx.stackTrace != null) {
-      Error.throwWithStackTrace(caughtEx, caughtEx.stackTrace!);
-    }
-    throw caughtEx as Object;
+    _throwCapturedException(caughtEx as Object);
+  }
+}
+
+void _drainAndLogPendingExceptions(WidgetTester tester, String context) {
+  while (true) {
+    final dynamic extraEx = tester.takeException();
+    if (extraEx == null) break;
+    stderr.writeln('[hegeltest_flutter] Extra exception ($context): $extraEx');
   }
 }
 
@@ -151,16 +166,33 @@ Future<void> _runStatefulWidgetIteration(
   WidgetTester tester,
   WidgetStateMachine Function() create,
 ) async {
-  await tester.pumpWidget(SizedBox.shrink(key: UniqueKey()));
-  while (tester.takeException() != null) {}
-
   final machine = create();
   final adapter = _WidgetStateMachineAdapter(machine, tester);
   machine._adapter = adapter;
 
   var bodyThrew = false;
+  Object? cleanupError;
+  StackTrace? cleanupStack;
+
+  void recordCleanupError(
+    Object error, [
+    StackTrace? stackTrace,
+    String context = 'cleanup',
+  ]) {
+    if (!bodyThrew && cleanupError == null) {
+      cleanupError = error;
+      cleanupStack = stackTrace ?? (error is Error ? error.stackTrace : null);
+    } else {
+      stderr.writeln('[hegeltest_flutter] $context threw: $error');
+      if (stackTrace != null) {
+        stderr.writeln(stackTrace);
+      }
+    }
+  }
+
   try {
     await machine.setUp(tester);
+    _rethrowPendingWidgetException(tester);
     await tester.pumpWidget(
       KeyedSubtree(key: UniqueKey(), child: machine.buildInitialWidget(tc)),
     );
@@ -170,17 +202,43 @@ Future<void> _runStatefulWidgetIteration(
     bodyThrew = true;
     rethrow;
   } finally {
-    while (tester.takeException() != null) {}
+    if (bodyThrew) {
+      _drainAndLogPendingExceptions(tester, 'body');
+    } else {
+      final dynamic bodyEx = tester.takeException();
+      if (bodyEx != null) {
+        recordCleanupError(bodyEx as Object, null, 'body pending');
+      }
+    }
+
     try {
       await machine.tearDown(tester);
-    } catch (e, st) {
-      if (!bodyThrew) {
-        rethrow;
+      final dynamic tearDownEx = tester.takeException();
+      if (tearDownEx != null) {
+        recordCleanupError(tearDownEx as Object, null, 'tearDown');
+        _drainAndLogPendingExceptions(tester, 'tearDown');
       }
-      stderr.writeln('[hegeltest_flutter] tearDown threw: $e\n$st');
+    } catch (e, st) {
+      recordCleanupError(e, st, 'tearDown');
+      _drainAndLogPendingExceptions(tester, 'tearDown');
+    }
+
+    try {
+      await tester.pumpWidget(SizedBox.shrink(key: UniqueKey()));
+      final dynamic disposeEx = tester.takeException();
+      if (disposeEx != null) {
+        recordCleanupError(disposeEx as Object, null, 'widget dispose');
+        _drainAndLogPendingExceptions(tester, 'widget dispose');
+      }
+    } catch (e, st) {
+      recordCleanupError(e, st, 'widget dispose');
+      _drainAndLogPendingExceptions(tester, 'widget dispose');
     } finally {
-      while (tester.takeException() != null) {}
       machine._adapter = null;
+    }
+
+    if (!bodyThrew && cleanupError != null) {
+      _throwCapturedException(cleanupError!, cleanupStack);
     }
   }
 }

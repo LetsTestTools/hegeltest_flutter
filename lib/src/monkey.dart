@@ -173,6 +173,10 @@ void hegelFlutterMonkeyTest(
                   stackTrace: st,
                 );
               }
+              final dynamic a11yEx = tester.takeException();
+              if (a11yEx != null) {
+                throw MonkeyFuzzException(steps: const [], cause: a11yEx);
+              }
             }
 
             final owner = tester.binding.rootPipelineOwner.semanticsOwner;
@@ -264,6 +268,10 @@ void hegelFlutterMonkeyTest(
                   cause: e,
                   stackTrace: st,
                 );
+              }
+              final dynamic a11yEx = tester.takeException();
+              if (a11yEx != null) {
+                throw MonkeyFuzzException(steps: stepHistory, cause: a11yEx);
               }
             }
 

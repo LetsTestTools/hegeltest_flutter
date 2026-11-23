@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest_flutter/hegeltest_flutter.dart';
@@ -171,11 +173,12 @@ void main() {
       },
     );
 
+    final sweepRecording = _RecordingGuideline();
     hegelFlutterLayoutSweepTest(
       'layout sweep integrates optional accessibilityGuidelines',
       testCases: 5,
       database: false,
-      accessibilityGuidelines: [labeledTapTargetGuideline],
+      accessibilityGuidelines: [sweepRecording],
       builder: (tc, sample) => Scaffold(
         body: Center(
           child: ElevatedButton(
@@ -185,8 +188,12 @@ void main() {
           ),
         ),
       ),
+      invariant: (tc, tester, sample) {
+        expect(sweepRecording.evaluateCount, greaterThan(0));
+      },
     );
 
+    final monkeyRecording = _RecordingGuideline();
     hegelFlutterMonkeyTest(
       'monkey test integrates optional accessibilityGuidelines',
       createWidget: (tc) => MaterialApp(
@@ -203,7 +210,24 @@ void main() {
       steps: 4,
       testCases: 5,
       database: false,
-      accessibilityGuidelines: [labeledTapTargetGuideline],
+      accessibilityGuidelines: [monkeyRecording],
+      invariant: (tc, tester) {
+        expect(monkeyRecording.evaluateCount, greaterThan(0));
+      },
     );
   });
+}
+
+class _RecordingGuideline extends AccessibilityGuideline {
+  int evaluateCount = 0;
+
+  @override
+  FutureOr<Evaluation> evaluate(WidgetTester tester) {
+    evaluateCount++;
+    return labeledTapTargetGuideline.evaluate(tester);
+  }
+
+  @override
+  String get description =>
+      'Recording(${labeledTapTargetGuideline.description})';
 }
