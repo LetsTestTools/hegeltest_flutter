@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+// ignore: deprecated_member_use
+import 'package:flutter/material.dart' show ThemeMode;
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest_flutter/generators.dart' as gen;
 import 'package:hegeltest_flutter/hegeltest_flutter.dart';
