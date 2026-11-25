@@ -1,4 +1,8 @@
-import 'package:flutter/material.dart';
+// Flutter 3.50+ deprecates package:flutter/material.dart in favor of
+// package:material_ui; import only ThemeMode while supporting Flutter >=3.38.0.
+// ignore: deprecated_member_use
+import 'package:flutter/material.dart' show ThemeMode;
+import 'package:flutter/widgets.dart';
 import 'package:hegeltest/hegeltest.dart';
 
 const List<Locale> _defaultLocales = [

@@ -1,6 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+// Flutter 3.50+ deprecates package:flutter/material.dart in favor of
+// package:material_ui; needed for MaterialApp/Material wrapping while
+// supporting Flutter >=3.38.0.
+// ignore: deprecated_member_use
+import 'package:flutter/material.dart'
+    show Material, MaterialApp, MaterialType, ThemeData;
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hegeltest/hegeltest.dart';
 

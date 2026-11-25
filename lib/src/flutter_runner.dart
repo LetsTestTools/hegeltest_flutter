@@ -169,15 +169,17 @@ void hegelFlutterStatefulTest(
 /// [TestCase] for drawing random values, and a [WidgetTester] for pumping widgets.
 ///
 /// ```dart
-/// import 'package:hegeltest_flutter/hegeltest_flutter.dart';
+/// import 'package:flutter/widgets.dart';
 /// import 'package:flutter_test/flutter_test.dart';
-/// import 'package:flutter/material.dart';
+/// import 'package:hegeltest_flutter/hegeltest_flutter.dart';
 ///
 /// void main() {
 ///   hegelFlutterWidgetTest('text widget renders correctly', (tc, tester) async {
-///     final text = tc.draw(strings());
-///     await tester.pumpWidget(MaterialApp(home: Text(text)));
-///     expect(find.text(text), findsOneWidget);
+///     final label = tc.draw(text());
+///     await tester.pumpWidget(
+///       Directionality(textDirection: TextDirection.ltr, child: Text(label)),
+///     );
+///     expect(find.text(label), findsOneWidget);
 ///   });
 /// }
 /// ```
